@@ -1,0 +1,39 @@
+OpenXC Retro Gauge
+=========================
+
+The Retro Gauge is a mechanical vehicle gauge that outputs data from OpenXC via
+serial communication. The purpose of this gauge is to display vehicle data in a
+traditional automotive fashion, a gauge! The design intent was to keep the gauge
+as open and accessible as possible so that the community could contribute and
+benefit from the design. Below is a description of the different aspects of the
+project and how the gauge was created.
+
+For more details on the project, visit the [OpenXC
+website](http://openxcplatform.com/hardware-addons/retro-gauge.html).
+
+This repository contains:
+
+**PCB Schematics** - The `schematics` folder contains Eagle schematics for the
+gauge.
+
+**Arduino Firmware** - The `firmware` folder contains Arduino source code to run
+on the gauge.
+
+**Enclosure 3D Model** - The `enclosure` folder contains STEP files for the 3D
+printable gauge housing.
+
+**Android App** - The `android` folder contains an OpenXC Android application
+that can send various vehicle measurements to display on the gauge.
+
+# Dependencies
+
+This module is based on several open source libraries that are included with the
+Arduino IDE install. The motor driver is based on [Guy Carpenter's Gaugette
+project][gaugette]. The SwitecX25 library can be found here:
+http://guy.carpenter.id.au/gaugette/about/
+
+# License
+
+This source code is available under the BSD license.
+
+[gaugette]: http://guy.carpenter.id.au/gaugette/about/
