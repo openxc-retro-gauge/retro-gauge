@@ -25,15 +25,8 @@ printable gauge housing.
 **Android App** - The `android` folder contains an OpenXC Android application
 that can send various vehicle measurements to display on the gauge.
 
-# Dependencies
-
-This module is based on several open source libraries that are included with the
-Arduino IDE install. The motor driver is based on [Guy Carpenter's Gaugette
-project][gaugette]. The SwitecX25 library can be found here:
-http://guy.carpenter.id.au/gaugette/about/
 
 # License
 
-This source code is available under the BSD license.
+The source code in this project is made available under the BSD license.
 
-[gaugette]: http://guy.carpenter.id.au/gaugette/about/
