@@ -1,0 +1,7 @@
+.DS_Store
+*~
+*.o
+target
+bin
+gen
+*/.classpath
