@@ -1,0 +1,13 @@
+Partlist exported from /Users/evansda/Documents/eagle/retroGauge/Rev2/GaugeRev2.sch at 12/18/12 12:39 PM
+
+Assembly variant: 
+
+Qty Value        Device       Parts                                                                
+1                M06SIP       JP1                                                                  
+2   74HCT595D    74HCT595D    SHIFT1, SHIFT2                                                       
+6   100          R-US_R1206   R15, R16, R17, R20, R21, R22                                         
+16  220          R-US_R1206   R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R18, R19
+1   ARDUINO_MINI ARDUINO_MINI U1                                                                   
+1   HD-K121      HD-K121      DIS2                                                                 
+2   LED-TRICOLOR LED-TRICOLOR LED1, LED2                                                           
+1   VID29        VID29        U2                                                                   
