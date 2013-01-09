@@ -9,7 +9,9 @@ Dependencies
 ------------
 
 The Gauge Driver requires the OpenXC Android Libraries as well as the open
-source FTDriver by ksksue, available here:  https://github.com/ksksue/FTDriver
+source [FTDriver by ksksue](https://github.com/ksksue/FTDriver). Download this
+library and import it into the same Eclipse workspace as the Gauge project to
+fix compile errors.
 
 Connections
 -----------
@@ -37,7 +39,7 @@ After startup, the user has the following options:
   Gauge. When off, no information is sent to the gauge.
 * Exit - Exits the application. Note that if the user navigates away from this
   activity via the home or back buttons, updates will continue in the
-  background. The Exit button ceases all USB communcation with the gauge.
+  background. The Exit button ceases all USB communication with the gauge.
 * Data Source Selection - The large buttons labeled "Vehicle Speed", "Miles per
   Gallon", and "Steering Wheel Angle" select those data sources for the
   application. When a data source is selected, a hard coded color pallet is
@@ -51,5 +53,5 @@ After startup, the user has the following options:
   zero to red at 80mph. Miles Per Gallon data sweeps through red at zero to
   green at 50 miles per gallon and above. Steering Wheel data sweeps through
   the entire spectrum.
-* Manual Data Entry - This is a debuging tool. Text entered in the text box is
+* Manual Data Entry - This is a debugging tool. Text entered in the text box is
   sent to the Retro Gauge when the Send button is tapped.
