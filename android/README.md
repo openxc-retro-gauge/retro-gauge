@@ -13,6 +13,10 @@ source [FTDriver by ksksue](https://github.com/ksksue/FTDriver). Download this
 library and import it into the same Eclipse workspace as the Gauge project to
 fix compile errors.
 
+If there are still errors, go to the `Android` properties for the
+`GaugeDriverActivity` project and manually re-link the `openxc` and `FTDriver`
+libraries at the bottom of the window.
+
 Connections
 -----------
 
