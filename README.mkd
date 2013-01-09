@@ -28,5 +28,8 @@ that can send various vehicle measurements to display on the gauge.
 
 # License
 
-The source code in this project is made available under the BSD license.
+The Android and firmware source code is available under the BSD open source
+license.
 
+The hardware schematics and enclosure design are available under the TAPR Open
+Hardware License.
