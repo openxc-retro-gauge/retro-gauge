@@ -224,15 +224,17 @@ public class GaugeDriverActivity extends Activity {
             }
         }
 
-        mToggleButton = (ToggleButton) findViewById(R.id.toggleButtonTimer);
-
         if (mReceiveTimer != null)  //If the timer is running
         {
             onTimerToggle(null);
             onTimerToggle(null);    //Reset the timer so the slider updates are pointing at the right Activity.
+        }
+        
+        mToggleButton = (ToggleButton) findViewById(R.id.toggleButtonTimer);
+        if (mReceiveTimer != null)  {  //If the timer is running
             mToggleButton.setChecked(true);
         } else {
-            mToggleButton.setChecked(true);
+            mToggleButton.setChecked(false);
         }
     }
 
