@@ -36,27 +36,27 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="150dp" >
+        android:layout_height="wrap_content" >
 
         <Button
             android:id="@+id/buttonSpeed"
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:layout_height="match_parent"
             android:layout_weight="0.30"
-            android:text="Vehicle Speed" 
-            android:onClick="onSpeedClick"/>
+            android:onClick="onSpeedClick"
+            android:text="Vehicle Speed" />
 
         <Button
             android:id="@+id/buttonMPG"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="0.31"
-            android:text="Miles Per Gallon" 
-            android:onClick="onMPGClick"/>
+            android:layout_width="fill_parent"
+            android:layout_height="114dp"
+            android:layout_weight="0.30"
+            android:onClick="onMPGClick"
+            android:text="Miles Per Gallon" />
 
         <Button
             android:id="@+id/buttonSteering"
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:layout_height="match_parent"
             android:layout_weight="0.30"
             android:text="Steering Wheel Angle" 
@@ -118,5 +118,13 @@
             android:text="Send" />
 
     </LinearLayout>
+
+    <EditText
+        android:id="@+id/editTextDebug"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:ems="10"
+        android:inputType="textMultiLine"
+        android:singleLine="false" />
 
 </LinearLayout>
