@@ -53,6 +53,10 @@ int time = 0;
 int digitUpdate = 1000; //1 Sec
 unsigned long motorPer;
 int speedSlope = 1739;
+long targetPosition = 0;
+long currentPosition = 0;
+unsigned long nextUpdate;
+long delta;
 
 
 void setup(void) {
@@ -73,12 +77,26 @@ void setup(void) {
   pinMode(LED_BLUE, OUTPUT);
   pinMode(LED_GREEN, OUTPUT);
 
+  nextUpdate = micros();
 }
 
 void loop() {  
+  delta = targetPosition - currentPosition;
+  if (micros() > nextUpdate) {
+    if((delta) > 0) {
+      motor1.stepUp();
+      currentPosition++;
+    } else if(delta < 0){
+      motor1.stepDown();
+      currentPosition--;
+    }
+//    nextUpdate += 6290 - 10*abs(targetPosition - currentPosition);
+    if (delta != 0) {
+      nextUpdate = micros() + 400 + 279841/(abs(delta));
+    }
+  }
 
   if (Serial.available()) {
-    delay(10);
 
     while (Serial.available() > 0){
       char c = Serial.read();
@@ -87,15 +105,21 @@ void loop() {
       if (c == ')' || c =='>'){
         parse_message(input);
         input = "";
+//        long delta = abs(targetPosition - currentPosition);
+//        if (delta == 0) {
+//          nextUpdate = 1000000000;
+//        } else {
+//          nextUpdate = micros() + 400 + 279841/(delta);
+//        }
+      }
+      if (c == 'u') {
+        motor1.stepUp();
+      }
+      if (c == 'd') {
+        motor1.stepDown();
       }
     }
   }
-  else {
-    //delay(100);
-  }
-  motor1.update();
-
-
 }
 
 void parse_message(String message) {
@@ -104,7 +128,8 @@ void parse_message(String message) {
     if (message[i] == '(') {
       motorVal = 10*(message[i+1]-'0') + (message[i+2]-'0');
       motorPer = motorVal*1000/speedSlope;
-      motor1.setPosition(STEPS*motorPer/100);
+      //motor1.setPosition(STEPS*motorPer/100);
+      targetPosition = STEPS*motorPer/100;
      
       //Update Digits
       setDisplay(LED_CHAR_SET[motorVal/10],LED_CHAR_SET[motorVal%10]);
@@ -116,7 +141,7 @@ void parse_message(String message) {
  
     if (message[i] == '<') {
       rgbValue = 100*(message[i+1] -'0') + 10*(message[i+2]-'0') + (message[i+3]-'0');
-      Serial.println(rgbValue);
+//    Serial.println(rgbValue);
       light = 100*(message[i+4] -'0') + 10*(message[i+5]-'0') + (message[i+6]-'0');
       setLED(rgbValue, 255);
     }

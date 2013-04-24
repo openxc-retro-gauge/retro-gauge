@@ -11,8 +11,6 @@ project and how the gauge was created.
 For more details on the project, visit the [OpenXC
 website](http://openxcplatform.com/hardware-addons/retro-gauge.html).
 
-For more information on how to solder you Retro Gauge, visit the [Soldering Instructables](http://www.instructables.com/id/How-to-Solder-Your-OpenXC-Retro-Gauge/)
-
 This repository contains:
 
 **PCB Schematics** - The `schematics` folder contains Eagle schematics for the
