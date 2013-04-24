@@ -9,7 +9,7 @@ benefit from the design. Below is a description of the different aspects of the
 project and how the gauge was created.
 
 For more details on the project, visit the [OpenXC
-website](http://openxcplatform.com/hardware-addons/retro-gauge.html).
+website](http://openxcplatform.com/projects/retro-gauge.html).
 
 This repository contains:
 
