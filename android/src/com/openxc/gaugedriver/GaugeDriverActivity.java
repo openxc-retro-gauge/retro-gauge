@@ -27,6 +27,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.openxc.sources.DataSourceException;
 import com.openxc.VehicleManager;
 import com.openxc.measurements.Odometer;
 import com.openxc.measurements.FuelConsumed;
@@ -51,7 +52,6 @@ public class GaugeDriverActivity extends Activity {
     private TextView mSendText;
     private TextView mDebugText;
 
-    private PendingIntent mPermissionIntent;
     UsbManager mUsbManager = null;
     UsbDevice mGaugeDevice = null;
     UsbDeviceConnection mGaugeConnection = null;
@@ -214,24 +214,13 @@ public class GaugeDriverActivity extends Activity {
 
         mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
-        mPermissionIntent = PendingIntent.getBroadcast(this, 0,
-                new Intent(ACTION_USB_PERMISSION), 0);
-        IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-        this.registerReceiver(mBroadcastReceiver, filter);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        registerReceiver(mBroadcastReceiver, filter);
 
-        if(mSerialPort == null){
-            mSerialPort = new FTDriver(mUsbManager);
-            mSerialPort.setPermissionIntent(mPermissionIntent);
-            mSerialStarted = mSerialPort.begin(9600);
-            if (!mSerialStarted)
-            {
-                Log.d(TAG, "mSerialPort.begin() failed.");
-            } else{
-                Log.d(TAG, "mSerialPort.begin() success!.");
-                if(mReceiveTimer == null)   //Start the updates.
-                    onTimerToggle(null);
-            }
-        }
+        filter = new IntentFilter();
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        registerReceiver(mBroadcastReceiver, filter);
 
         if (mReceiveTimer != null)  //If the timer is running
         {
@@ -245,31 +234,39 @@ public class GaugeDriverActivity extends Activity {
         } else {
             mToggleButton.setChecked(false);
         }
+
+        bindService(new Intent(this, VehicleManager.class),
+                mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void connectToDevice() {
+         if(mSerialPort != null) {
+            mSerialPort.end();
+         }
+         mSerialPort = new FTDriver(mUsbManager);
+         mSerialPort.setPermissionIntent(PendingIntent.getBroadcast(this, 0,
+                  new Intent(ACTION_USB_PERMISSION), 0));
+         mSerialStarted = mSerialPort.begin(9600);
+         if (!mSerialStarted)
+         {
+             Log.d(TAG, "mSerialPort.begin() failed.");
+         } else {
+             Log.d(TAG, "mSerialPort.begin() success!.");
+             if(mReceiveTimer == null)   //Start the updates.
+                 onTimerToggle(null);
+         }
     }
 
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (ACTION_USB_PERMISSION.equals(action)) {
-                UsbDevice device = (UsbDevice) intent.getParcelableExtra(
-                        UsbManager.EXTRA_DEVICE);
-
-                if(intent.getBooleanExtra(
-                            UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-                    mSerialStarted = mSerialPort.begin(9600);
-                    if (mSerialStarted)
-                    {
-                        if(mReceiveTimer != null)
-                            //We can't update the toggle switch from here, so we stop the updates if they're active.
-                            onTimerToggle(null);
-                    } else
-                    {
-                        Log.d(TAG, "mSerialPort.begin() failed AGAIN.");
-                    }
-                } else {
-                    Log.i(TAG, "User declined permission for device " + device);
-                }
+            if(UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
+                Log.d(TAG, "Device attached");
+                connectToDevice();
+            } else if(UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+                Log.d(TAG, "Device detached");
+                mSerialPort = null;
             }
         }
     };
@@ -277,8 +274,7 @@ public class GaugeDriverActivity extends Activity {
     @Override
     public void onResume() {
         super.onResume();
-        bindService(new Intent(this, VehicleManager.class),
-                mConnection, Context.BIND_AUTO_CREATE);
+        connectToDevice();
     }
 
     private void UpdateStatus(String newMessage) {
