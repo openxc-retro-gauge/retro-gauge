@@ -37,14 +37,13 @@ import com.openxc.measurements.VehicleSpeed;
 import com.openxc.remote.VehicleServiceException;
 
 public class GaugeDriverActivity extends Activity {
-	
+
 	static int mDebugCounter = 10;
 
     private static String TAG = "GaugeDriver";
     private static int mTimerPeriod = 10;  //Time between Gauge updates, in milliseconds.
 
     private VehicleManager mVehicleManager;
-    private boolean mIsBound;
     StringBuffer mBuffer;
 
     private ToggleButton mToggleButton;
@@ -81,15 +80,15 @@ public class GaugeDriverActivity extends Activity {
     static double mSpeed = 0.0;
     static double mSteeringWheelAngle = 0.0;
     static double mMPG = 0.0;
-    
+
     static int mSpeedCount = 0;
     static int mSteeringCount = 0;
     static int mFuelCount = 0;
     static int mOdoCount = 0;
-    
+
     static FuelOdoHandler mFuelTotal = new FuelOdoHandler(5000);   //Delay time in milliseconds.
     static FuelOdoHandler mOdoTotal = new FuelOdoHandler(5000);
-    
+
     VehicleSpeed.Listener mSpeedListener = new VehicleSpeed.Listener() {
         public void receive(Measurement measurement) {
             final VehicleSpeed speed = (VehicleSpeed) measurement;
@@ -157,14 +156,12 @@ public class GaugeDriverActivity extends Activity {
             } catch(UnrecognizedMeasurementTypeException e) {
                  Log.w(TAG, "Couldn't add listeners for measurements", e);
             }
-            mIsBound = true;
         }
 
         // Called when the connection with the service disconnects unexpectedly
         public void onServiceDisconnected(ComponentName className) {
             Log.w(TAG, "VehicleService disconnected unexpectedly");
             mVehicleManager = null;
-            mIsBound = false;
         }
     };
 
@@ -175,9 +172,6 @@ public class GaugeDriverActivity extends Activity {
         setContentView(R.layout.main);
 
         Log.i(TAG, "Gauge Driver created");
-
-        Intent intent = new Intent(this, VehicleManager.class);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
 
         mColorCheckBox = (CheckBox) findViewById(R.id.checkBoxColor);
         mColorCheckBox.setChecked(mColorToValue);
@@ -287,15 +281,6 @@ public class GaugeDriverActivity extends Activity {
                 mConnection, Context.BIND_AUTO_CREATE);
     }
 
-    public void onPause() {
-        super.onPause();
-        if(mIsBound) {
-            //Log.i(TAG, "Unbinding from vehicle service");
-            //unbindService(mConnection);
-            //mIsBound = false;
-        }
-    }
-
     private void UpdateStatus(String newMessage) {
         final CharSequence outCS = newMessage;
         runOnUiThread(new Runnable() {
@@ -304,7 +289,7 @@ public class GaugeDriverActivity extends Activity {
             }
         });
     }
-    
+
     private void UpdateDebug(final boolean clearFirst, String newMessage) {
         final CharSequence outCS = newMessage;
         runOnUiThread(new Runnable() {
@@ -361,7 +346,7 @@ public class GaugeDriverActivity extends Activity {
             dPercent = 1.0;
         else if (dPercent < 0.0)
             dPercent = 0.0;
-        
+
         if(mColorToValue) {
             int thisColor = 0;
             switch (mDataUsed) {
@@ -406,7 +391,7 @@ public class GaugeDriverActivity extends Activity {
         int value = (int)dValue;
         if (value > 99)
         	value = 99;  //We've only got two digits to work with.
-        
+
         String dataPacket = "(" + String.format("%02d", value) + "|" +
                 String.format("%02d", iPercent) + ")";
         writeStringToSerial(dataPacket);
@@ -414,7 +399,7 @@ public class GaugeDriverActivity extends Activity {
 //        mDebugCounter--;
 //        if (mDebugCounter < 1) {
 //        	UpdateDebug(true, "Latest Fuel: " + mFuelTotal.Latest() + "\nFuel Updates: " + mFuelCount +
-//        		"\nLatest Odometer: " + mOdoTotal.Latest() + "\nOdometer Updates: " + mOdoCount + 
+//        		"\nLatest Odometer: " + mOdoTotal.Latest() + "\nOdometer Updates: " + mOdoCount +
 //        		"\nTotal MPG: " + ((mOdoTotal.Latest()/mFuelTotal.Latest())*2.35215));
 //        	mDebugCounter = 3;
 //        }
@@ -443,10 +428,10 @@ public class GaugeDriverActivity extends Activity {
         if (mSerialPort != null){
             mSerialPort.end();
         }
-        if(mIsBound) {
+        if(mVehicleManager != null) {
             Log.i(TAG, "Unbinding from vehicle service before exit");
             unbindService(mConnection);
-            mIsBound = false;
+            mVehicleManager = null;
         }
         finish();
         System.exit(0);
