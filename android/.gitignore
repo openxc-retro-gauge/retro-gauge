@@ -1,3 +1,10 @@
+.settings
+target
 bin
 gen
+.DS_Store
+reference
+*.asc
 .settings
+.project
+.classpath
