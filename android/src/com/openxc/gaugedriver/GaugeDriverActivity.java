@@ -38,7 +38,7 @@ import com.openxc.remote.VehicleServiceException;
 
 public class GaugeDriverActivity extends Activity {
 
-	static int mDebugCounter = 10;
+    static int mDebugCounter = 10;
 
     private static String TAG = "GaugeDriver";
     private static int mTimerPeriod = 10;  //Time between Gauge updates, in milliseconds.
@@ -101,25 +101,25 @@ public class GaugeDriverActivity extends Activity {
 
     FuelConsumed.Listener mFuelConsumedListener = new FuelConsumed.Listener() {
         public void receive(Measurement measurement) {
-        	mFuelCount++;
+            mFuelCount++;
             final FuelConsumed fuel = (FuelConsumed) measurement;
             long now = System.currentTimeMillis();
             double fuelConsumed = fuel.getValue().doubleValue();
             mFuelTotal.Add(fuelConsumed, now);
             double currentFuel = mFuelTotal.Recalculate(now);
             if(currentFuel > 0.00001) {
-            	double currentOdo = mOdoTotal.Recalculate(now);
-            	mMPG = (currentOdo / currentFuel) * 2.35215;  //Converting from km / l to mi / gal.
+                double currentOdo = mOdoTotal.Recalculate(now);
+                mMPG = (currentOdo / currentFuel) * 2.35215;  //Converting from km / l to mi / gal.
             }
-           	if(mDataUsed == 1) {
-           		mNewData = true;
+               if(mDataUsed == 1) {
+                   mNewData = true;
             }
         }
     };
 
    Odometer.Listener mFineOdometerListener = new Odometer.Listener() {
         public void receive(Measurement measurement) {
-        	mOdoCount++;
+            mOdoCount++;
             final Odometer odometer = (Odometer) measurement;
             mOdoTotal.Add(odometer.getValue().doubleValue(), System.currentTimeMillis());
         }
@@ -127,7 +127,7 @@ public class GaugeDriverActivity extends Activity {
 
     SteeringWheelAngle.Listener mSteeringWheelListener = new SteeringWheelAngle.Listener() {
         public void receive(Measurement measurement) {
-        	mSteeringCount++;
+            mSteeringCount++;
             final SteeringWheelAngle angle = (SteeringWheelAngle) measurement;
             mSteeringWheelAngle = angle.getValue().doubleValue();
             if(mDataUsed == 2)
@@ -238,7 +238,7 @@ public class GaugeDriverActivity extends Activity {
             onTimerToggle(null);
             onTimerToggle(null);    //Reset the timer so the slider updates are pointing at the right Activity.
         }
-        
+
         mToggleButton = (ToggleButton) findViewById(R.id.toggleButtonTimer);
         if (mReceiveTimer != null)  {  //If the timer is running
             mToggleButton.setChecked(true);
@@ -260,8 +260,8 @@ public class GaugeDriverActivity extends Activity {
                     mSerialStarted = mSerialPort.begin(9600);
                     if (mSerialStarted)
                     {
-                        if(mReceiveTimer != null)   
-                        	//We can't update the toggle switch from here, so we stop the updates if they're active.
+                        if(mReceiveTimer != null)
+                            //We can't update the toggle switch from here, so we stop the updates if they're active.
                             onTimerToggle(null);
                     } else
                     {
@@ -294,10 +294,10 @@ public class GaugeDriverActivity extends Activity {
         final CharSequence outCS = newMessage;
         runOnUiThread(new Runnable() {
             public void run() {
-            	if(clearFirst)
-            		mDebugText.setText(outCS);
-            	else
-            		mDebugText.append(outCS);
+                if(clearFirst)
+                    mDebugText.setText(outCS);
+                else
+                    mDebugText.append(outCS);
             }
         });
     }
@@ -390,7 +390,7 @@ public class GaugeDriverActivity extends Activity {
 
         int value = (int)dValue;
         if (value > 99)
-        	value = 99;  //We've only got two digits to work with.
+            value = 99;  //We've only got two digits to work with.
 
         String dataPacket = "(" + String.format("%02d", value) + "|" +
                 String.format("%02d", iPercent) + ")";
@@ -398,27 +398,27 @@ public class GaugeDriverActivity extends Activity {
         //UpdateDebug(false, dataPacket + "\n");
 //        mDebugCounter--;
 //        if (mDebugCounter < 1) {
-//        	UpdateDebug(true, "Latest Fuel: " + mFuelTotal.Latest() + "\nFuel Updates: " + mFuelCount +
-//        		"\nLatest Odometer: " + mOdoTotal.Latest() + "\nOdometer Updates: " + mOdoCount +
-//        		"\nTotal MPG: " + ((mOdoTotal.Latest()/mFuelTotal.Latest())*2.35215));
-//        	mDebugCounter = 3;
+//            UpdateDebug(true, "Latest Fuel: " + mFuelTotal.Latest() + "\nFuel Updates: " + mFuelCount +
+//                "\nLatest Odometer: " + mOdoTotal.Latest() + "\nOdometer Updates: " + mOdoCount +
+//                "\nTotal MPG: " + ((mOdoTotal.Latest()/mFuelTotal.Latest())*2.35215));
+//            mDebugCounter = 3;
 //        }
     }
 
     private void writeStringToSerial(String outString){
-    	if(mSerialStarted) {
-	        char[] outMessage = outString.toCharArray();
-	        byte outBuffer[] = new byte[128];
-	        for(int i=0; i<outString.length(); i++)
-	        {
-	            outBuffer[i] = (byte)outMessage[i];
-	        }
-	        try {
-	            mSerialPort.write(outBuffer,  outString.length());
-	        } catch (Exception e) {
-	            Log.d(TAG, "mSerialPort.write() just threw an exception.  Is the cable plugged in?");
-	        }
-    	}
+        if(mSerialStarted) {
+            char[] outMessage = outString.toCharArray();
+            byte outBuffer[] = new byte[128];
+            for(int i=0; i<outString.length(); i++)
+            {
+                outBuffer[i] = (byte)outMessage[i];
+            }
+            try {
+                mSerialPort.write(outBuffer,  outString.length());
+            } catch (Exception e) {
+                Log.d(TAG, "mSerialPort.write() just threw an exception.  Is the cable plugged in?");
+            }
+        }
     }
 
     public void onExit(View view){
