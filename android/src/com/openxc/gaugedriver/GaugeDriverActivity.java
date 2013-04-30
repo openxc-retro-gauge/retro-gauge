@@ -27,6 +27,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.openxc.sources.DataSourceException;
 import com.openxc.VehicleManager;
 import com.openxc.measurements.Odometer;
 import com.openxc.measurements.FuelConsumed;
@@ -37,14 +38,13 @@ import com.openxc.measurements.VehicleSpeed;
 import com.openxc.remote.VehicleServiceException;
 
 public class GaugeDriverActivity extends Activity {
-	
-	static int mDebugCounter = 10;
+
+    static int mDebugCounter = 10;
 
     private static String TAG = "GaugeDriver";
     private static int mTimerPeriod = 10;  //Time between Gauge updates, in milliseconds.
 
     private VehicleManager mVehicleManager;
-    private boolean mIsBound;
     StringBuffer mBuffer;
 
     private ToggleButton mToggleButton;
@@ -52,7 +52,6 @@ public class GaugeDriverActivity extends Activity {
     private TextView mSendText;
     private TextView mDebugText;
 
-    private PendingIntent mPermissionIntent;
     UsbManager mUsbManager = null;
     UsbDevice mGaugeDevice = null;
     UsbDeviceConnection mGaugeConnection = null;
@@ -81,15 +80,15 @@ public class GaugeDriverActivity extends Activity {
     static double mSpeed = 0.0;
     static double mSteeringWheelAngle = 0.0;
     static double mMPG = 0.0;
-    
+
     static int mSpeedCount = 0;
     static int mSteeringCount = 0;
     static int mFuelCount = 0;
     static int mOdoCount = 0;
-    
+
     static FuelOdoHandler mFuelTotal = new FuelOdoHandler(5000);   //Delay time in milliseconds.
     static FuelOdoHandler mOdoTotal = new FuelOdoHandler(5000);
-    
+
     VehicleSpeed.Listener mSpeedListener = new VehicleSpeed.Listener() {
         public void receive(Measurement measurement) {
             final VehicleSpeed speed = (VehicleSpeed) measurement;
@@ -102,25 +101,25 @@ public class GaugeDriverActivity extends Activity {
 
     FuelConsumed.Listener mFuelConsumedListener = new FuelConsumed.Listener() {
         public void receive(Measurement measurement) {
-        	mFuelCount++;
+            mFuelCount++;
             final FuelConsumed fuel = (FuelConsumed) measurement;
             long now = System.currentTimeMillis();
             double fuelConsumed = fuel.getValue().doubleValue();
             mFuelTotal.Add(fuelConsumed, now);
             double currentFuel = mFuelTotal.Recalculate(now);
             if(currentFuel > 0.00001) {
-            	double currentOdo = mOdoTotal.Recalculate(now);
-            	mMPG = (currentOdo / currentFuel) * 2.35215;  //Converting from km / l to mi / gal.
+                double currentOdo = mOdoTotal.Recalculate(now);
+                mMPG = (currentOdo / currentFuel) * 2.35215;  //Converting from km / l to mi / gal.
             }
-           	if(mDataUsed == 1) {
-           		mNewData = true;
+               if(mDataUsed == 1) {
+                   mNewData = true;
             }
         }
     };
 
    Odometer.Listener mFineOdometerListener = new Odometer.Listener() {
         public void receive(Measurement measurement) {
-        	mOdoCount++;
+            mOdoCount++;
             final Odometer odometer = (Odometer) measurement;
             mOdoTotal.Add(odometer.getValue().doubleValue(), System.currentTimeMillis());
         }
@@ -128,7 +127,7 @@ public class GaugeDriverActivity extends Activity {
 
     SteeringWheelAngle.Listener mSteeringWheelListener = new SteeringWheelAngle.Listener() {
         public void receive(Measurement measurement) {
-        	mSteeringCount++;
+            mSteeringCount++;
             final SteeringWheelAngle angle = (SteeringWheelAngle) measurement;
             mSteeringWheelAngle = angle.getValue().doubleValue();
             if(mDataUsed == 2)
@@ -157,14 +156,12 @@ public class GaugeDriverActivity extends Activity {
             } catch(UnrecognizedMeasurementTypeException e) {
                  Log.w(TAG, "Couldn't add listeners for measurements", e);
             }
-            mIsBound = true;
         }
 
         // Called when the connection with the service disconnects unexpectedly
         public void onServiceDisconnected(ComponentName className) {
             Log.w(TAG, "VehicleService disconnected unexpectedly");
             mVehicleManager = null;
-            mIsBound = false;
         }
     };
 
@@ -175,9 +172,6 @@ public class GaugeDriverActivity extends Activity {
         setContentView(R.layout.main);
 
         Log.i(TAG, "Gauge Driver created");
-
-        Intent intent = new Intent(this, VehicleManager.class);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
 
         mColorCheckBox = (CheckBox) findViewById(R.id.checkBoxColor);
         mColorCheckBox.setChecked(mColorToValue);
@@ -220,62 +214,59 @@ public class GaugeDriverActivity extends Activity {
 
         mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
-        mPermissionIntent = PendingIntent.getBroadcast(this, 0,
-                new Intent(ACTION_USB_PERMISSION), 0);
-        IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-        this.registerReceiver(mBroadcastReceiver, filter);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        registerReceiver(mBroadcastReceiver, filter);
 
-        if(mSerialPort == null){
-            mSerialPort = new FTDriver(mUsbManager);
-            mSerialPort.setPermissionIntent(mPermissionIntent);
-            mSerialStarted = mSerialPort.begin(9600);
-            if (!mSerialStarted)
-            {
-                Log.d(TAG, "mSerialPort.begin() failed.");
-            } else{
-                Log.d(TAG, "mSerialPort.begin() success!.");
-                if(mReceiveTimer == null)   //Start the updates.
-                    onTimerToggle(null);
-            }
-        }
+        filter = new IntentFilter();
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        registerReceiver(mBroadcastReceiver, filter);
 
         if (mReceiveTimer != null)  //If the timer is running
         {
             onTimerToggle(null);
             onTimerToggle(null);    //Reset the timer so the slider updates are pointing at the right Activity.
         }
-        
+
         mToggleButton = (ToggleButton) findViewById(R.id.toggleButtonTimer);
         if (mReceiveTimer != null)  {  //If the timer is running
             mToggleButton.setChecked(true);
         } else {
             mToggleButton.setChecked(false);
         }
+
+        bindService(new Intent(this, VehicleManager.class),
+                mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void connectToDevice() {
+         if(mSerialPort != null) {
+            mSerialPort.end();
+         }
+         mSerialPort = new FTDriver(mUsbManager);
+         mSerialPort.setPermissionIntent(PendingIntent.getBroadcast(this, 0,
+                  new Intent(ACTION_USB_PERMISSION), 0));
+         mSerialStarted = mSerialPort.begin(9600);
+         if (!mSerialStarted)
+         {
+             Log.d(TAG, "mSerialPort.begin() failed.");
+         } else {
+             Log.d(TAG, "mSerialPort.begin() success!.");
+             if(mReceiveTimer == null)   //Start the updates.
+                 onTimerToggle(null);
+         }
     }
 
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (ACTION_USB_PERMISSION.equals(action)) {
-                UsbDevice device = (UsbDevice) intent.getParcelableExtra(
-                        UsbManager.EXTRA_DEVICE);
-
-                if(intent.getBooleanExtra(
-                            UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-                    mSerialStarted = mSerialPort.begin(9600);
-                    if (mSerialStarted)
-                    {
-                        if(mReceiveTimer != null)   
-                        	//We can't update the toggle switch from here, so we stop the updates if they're active.
-                            onTimerToggle(null);
-                    } else
-                    {
-                        Log.d(TAG, "mSerialPort.begin() failed AGAIN.");
-                    }
-                } else {
-                    Log.i(TAG, "User declined permission for device " + device);
-                }
+            if(UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
+                Log.d(TAG, "Device attached");
+                connectToDevice();
+            } else if(UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+                Log.d(TAG, "Device detached");
+                mSerialPort = null;
             }
         }
     };
@@ -283,17 +274,7 @@ public class GaugeDriverActivity extends Activity {
     @Override
     public void onResume() {
         super.onResume();
-        bindService(new Intent(this, VehicleManager.class),
-                mConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    public void onPause() {
-        super.onPause();
-        if(mIsBound) {
-            //Log.i(TAG, "Unbinding from vehicle service");
-            //unbindService(mConnection);
-            //mIsBound = false;
-        }
+        connectToDevice();
     }
 
     private void UpdateStatus(String newMessage) {
@@ -304,15 +285,15 @@ public class GaugeDriverActivity extends Activity {
             }
         });
     }
-    
+
     private void UpdateDebug(final boolean clearFirst, String newMessage) {
         final CharSequence outCS = newMessage;
         runOnUiThread(new Runnable() {
             public void run() {
-            	if(clearFirst)
-            		mDebugText.setText(outCS);
-            	else
-            		mDebugText.append(outCS);
+                if(clearFirst)
+                    mDebugText.setText(outCS);
+                else
+                    mDebugText.append(outCS);
             }
         });
     }
@@ -361,7 +342,7 @@ public class GaugeDriverActivity extends Activity {
             dPercent = 1.0;
         else if (dPercent < 0.0)
             dPercent = 0.0;
-        
+
         if(mColorToValue) {
             int thisColor = 0;
             switch (mDataUsed) {
@@ -405,35 +386,35 @@ public class GaugeDriverActivity extends Activity {
 
         int value = (int)dValue;
         if (value > 99)
-        	value = 99;  //We've only got two digits to work with.
-        
+            value = 99;  //We've only got two digits to work with.
+
         String dataPacket = "(" + String.format("%02d", value) + "|" +
                 String.format("%02d", iPercent) + ")";
         writeStringToSerial(dataPacket);
         //UpdateDebug(false, dataPacket + "\n");
 //        mDebugCounter--;
 //        if (mDebugCounter < 1) {
-//        	UpdateDebug(true, "Latest Fuel: " + mFuelTotal.Latest() + "\nFuel Updates: " + mFuelCount +
-//        		"\nLatest Odometer: " + mOdoTotal.Latest() + "\nOdometer Updates: " + mOdoCount + 
-//        		"\nTotal MPG: " + ((mOdoTotal.Latest()/mFuelTotal.Latest())*2.35215));
-//        	mDebugCounter = 3;
+//            UpdateDebug(true, "Latest Fuel: " + mFuelTotal.Latest() + "\nFuel Updates: " + mFuelCount +
+//                "\nLatest Odometer: " + mOdoTotal.Latest() + "\nOdometer Updates: " + mOdoCount +
+//                "\nTotal MPG: " + ((mOdoTotal.Latest()/mFuelTotal.Latest())*2.35215));
+//            mDebugCounter = 3;
 //        }
     }
 
     private void writeStringToSerial(String outString){
-    	if(mSerialStarted) {
-	        char[] outMessage = outString.toCharArray();
-	        byte outBuffer[] = new byte[128];
-	        for(int i=0; i<outString.length(); i++)
-	        {
-	            outBuffer[i] = (byte)outMessage[i];
-	        }
-	        try {
-	            mSerialPort.write(outBuffer,  outString.length());
-	        } catch (Exception e) {
-	            Log.d(TAG, "mSerialPort.write() just threw an exception.  Is the cable plugged in?");
-	        }
-    	}
+        if(mSerialStarted) {
+            char[] outMessage = outString.toCharArray();
+            byte outBuffer[] = new byte[128];
+            for(int i=0; i<outString.length(); i++)
+            {
+                outBuffer[i] = (byte)outMessage[i];
+            }
+            try {
+                mSerialPort.write(outBuffer,  outString.length());
+            } catch (Exception e) {
+                Log.d(TAG, "mSerialPort.write() just threw an exception.  Is the cable plugged in?");
+            }
+        }
     }
 
     public void onExit(View view){
@@ -443,10 +424,10 @@ public class GaugeDriverActivity extends Activity {
         if (mSerialPort != null){
             mSerialPort.end();
         }
-        if(mIsBound) {
+        if(mVehicleManager != null) {
             Log.i(TAG, "Unbinding from vehicle service before exit");
             unbindService(mConnection);
-            mIsBound = false;
+            mVehicleManager = null;
         }
         finish();
         System.exit(0);

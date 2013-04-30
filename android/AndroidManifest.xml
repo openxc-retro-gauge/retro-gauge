@@ -4,6 +4,10 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
+    <uses-feature android:name="android.hardware.usb.host"
+        android:required="true" />
+    <uses-sdk android:minSdkVersion="12" android:targetSdkVersion="17" />
+
     <application android:icon="@drawable/ic_launcher"
             android:label="@string/app_name" >
         <activity android:name=".GaugeDriverActivity"
@@ -13,9 +17,15 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+
+            <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                    android:resource="@xml/device_filter" />
         </activity>
         <service android:name="com.openxc.VehicleManager"/>
     </application>
 
-    <uses-sdk android:minSdkVersion="12" android:targetSdkVersion="17" />
 </manifest>
