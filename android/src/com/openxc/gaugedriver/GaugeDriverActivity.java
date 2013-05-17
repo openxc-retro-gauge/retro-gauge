@@ -77,9 +77,9 @@ public class GaugeDriverActivity extends Activity {
     public static final String ACTION_USB_PERMISSION =
             "com.ford.openxc.USB_PERMISSION";
 
-    static double mSpeed = 0.0;
-    static double mSteeringWheelAngle = 0.0;
-    static double mMPG = 0.0;
+    static volatile double mSpeed = 0.0;
+    static volatile double mSteeringWheelAngle = 0.0;
+    static volatile double mMPG = 0.0;
 
     static int mSpeedCount = 0;
     static int mSteeringCount = 0;
