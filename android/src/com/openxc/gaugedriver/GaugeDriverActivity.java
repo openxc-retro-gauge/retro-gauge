@@ -5,17 +5,12 @@ import java.util.TimerTask;
 
 import jp.ksksue.driver.serial.FTDriver;
 import android.app.Activity;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbDeviceConnection;
-import android.hardware.usb.UsbEndpoint;
-import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -27,7 +22,6 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
-import com.openxc.sources.DataSourceException;
 import com.openxc.VehicleManager;
 import com.openxc.measurements.Odometer;
 import com.openxc.measurements.FuelConsumed;
@@ -53,11 +47,6 @@ public class GaugeDriverActivity extends Activity {
     private TextView mDebugText;
 
     UsbManager mUsbManager = null;
-    UsbDevice mGaugeDevice = null;
-    UsbDeviceConnection mGaugeConnection = null;
-    UsbEndpoint mEndpointIn = null;
-    UsbEndpoint mEndpointOut = null;
-    UsbInterface mGaugeInterface = null;
 
     private static int mDataUsed = 0;
     private static boolean mNewData = false;
@@ -65,7 +54,6 @@ public class GaugeDriverActivity extends Activity {
     static double mGaugeMin = 0;
     static double mGaugeRange = 80;
 
-    static boolean mSerialStarted = false;
     static FTDriver mSerialPort = null;
 
     static private Timer mReceiveTimer = null;
@@ -73,9 +61,6 @@ public class GaugeDriverActivity extends Activity {
     private CheckBox mColorCheckBox;
     private SeekBar mColorSeekBar;
     static private int mLastColor = 0;
-
-    public static final String ACTION_USB_PERMISSION =
-            "com.ford.openxc.USB_PERMISSION";
 
     static volatile double mSpeed = 0.0;
     static volatile double mSteeringWheelAngle = 0.0;
@@ -215,10 +200,6 @@ public class GaugeDriverActivity extends Activity {
         mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
-        registerReceiver(mBroadcastReceiver, filter);
-
-        filter = new IntentFilter();
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(mBroadcastReceiver, filter);
 
@@ -240,14 +221,16 @@ public class GaugeDriverActivity extends Activity {
     }
 
     private void connectToDevice() {
-         if(mSerialPort != null) {
-            mSerialPort.end();
+         if(mSerialPort == null) {
+        	 mSerialPort = new FTDriver(mUsbManager);
          }
-         mSerialPort = new FTDriver(mUsbManager);
-         mSerialPort.setPermissionIntent(PendingIntent.getBroadcast(this, 0,
-                  new Intent(ACTION_USB_PERMISSION), 0));
-         mSerialStarted = mSerialPort.begin(9600);
-         if (!mSerialStarted)
+         
+         if(mSerialPort.isConnected()) {
+        	 mSerialPort.end();
+         }
+
+         mSerialPort.begin(9600);
+         if (!mSerialPort.isConnected())
          {
              Log.d(TAG, "mSerialPort.begin() failed.");
          } else {
@@ -261,12 +244,9 @@ public class GaugeDriverActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if(UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
-                Log.d(TAG, "Device attached");
-                connectToDevice();
-            } else if(UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+            if(UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
                 Log.d(TAG, "Device detached");
-                mSerialPort = null;
+                mSerialPort.end();
             }
         }
     };
@@ -402,7 +382,7 @@ public class GaugeDriverActivity extends Activity {
     }
 
     private void writeStringToSerial(String outString){
-        if(mSerialStarted) {
+        if(mSerialPort.isConnected()) {
             char[] outMessage = outString.toCharArray();
             byte outBuffer[] = new byte[128];
             for(int i=0; i<outString.length(); i++)
