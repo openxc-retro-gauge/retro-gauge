@@ -1,5 +1,6 @@
 package com.openxc.gaugedriver;
 
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -11,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -226,7 +228,8 @@ public class GaugeDriverActivity extends Activity {
          }
          
          if(mSerialPort.isConnected()) {
-        	 mSerialPort.end();
+        	 //mSerialPort.end();
+        	 return;
          }
 
          mSerialPort.begin(9600);
@@ -246,7 +249,11 @@ public class GaugeDriverActivity extends Activity {
             String action = intent.getAction();
             if(UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
                 Log.d(TAG, "Device detached");
-                mSerialPort.end();
+                Bundle extras = intent.getExtras();
+                UsbDevice lostDevice = (UsbDevice)extras.get("device");
+                if(lostDevice.equals(mSerialPort.getDevice())) {
+                	mSerialPort.end();
+                } 
             }
         }
     };
