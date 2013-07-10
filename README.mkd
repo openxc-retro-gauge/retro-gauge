@@ -27,11 +27,11 @@ printable gauge housing.
 **Android App** - The `android` folder contains an OpenXC Android application
 that can send various vehicle measurements to display on the gauge.
 
-
 # License
 
 The Android and firmware source code is available under the BSD open source
 license.
 
-The hardware schematics and enclosure design are available under the TAPR Open
-Hardware License.
+The designs in this repository are available under the [Creative Commons
+Atribution 3.0 Unported](http://creativecommons.org/licenses/by/3.0/deed.en_US)
+license.
