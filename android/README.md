@@ -16,9 +16,10 @@ additional documentation in the README file.
 
 ### FT Driver
 
-The Gauge Driver also requires the [FTDriver by
-ksksue](https://github.com/ksksue/FTDriver). Download this library and import it
-into the same Eclipse workspace as the Gauge project to fix compile errors.
+The Gauge Driver also requires [our fork of
+FTDriver](https://github.com/openxc/FTDriver) on the `openxc` branch. Download
+this library and import it into the same Eclipse workspace as the Gauge project
+to fix compile errors.
 
 If there are still errors, go to the `Android` properties for the
 `GaugeDriverActivity` project and manually re-link the `openxc` and `FTDriver`
