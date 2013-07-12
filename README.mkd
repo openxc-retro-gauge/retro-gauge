@@ -22,7 +22,9 @@ gauge.
 on the gauge.
 
 **Enclosure 3D Model** - The `enclosure` folder contains STEP files for the 3D
-printable gauge housing.
+printable gauge housing. The `makerbot_friendly` folder conatins the same STEP
+files, but rotated so they will lie flat on the bed - ready to load up onto a
+MakerBot and hit "print".
 
 **Android App** - The `android` folder contains an OpenXC Android application
 that can send various vehicle measurements to display on the gauge.
