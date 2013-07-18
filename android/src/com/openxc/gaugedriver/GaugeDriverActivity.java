@@ -34,60 +34,48 @@ import com.openxc.remote.VehicleServiceException;
 
 public class GaugeDriverActivity extends Activity {
 
-    static int mDebugCounter = 10;
-
-    private static String TAG = "GaugeDriver";
-    private static int mTimerPeriod = 10;  //Time between Gauge updates, in milliseconds.
+    private String TAG = "GaugeDriver";
+    private int mTimerPeriod = 10;  //Time between Gauge updates, in milliseconds.
 
     private VehicleManager mVehicleManager;
-    StringBuffer mBuffer;
 
     private ToggleButton mToggleButton;
     private TextView mStatusText;
     private TextView mSendText;
-    private TextView mDebugText;
 
-    UsbManager mUsbManager = null;
+    private UsbManager mUsbManager = null;
+    private FTDriver mSerialPort = null;
 
-    private static int mDataUsed = 0;
-    private static boolean mNewData = false;
+    private int mDataUsed = 0;
+    private boolean mNewData = false;
 
-    static double mGaugeMin = 0;
-    static double mGaugeRange = 80;
+    private double mGaugeMin = 0;
+    private double mGaugeRange = 80;
 
-    static FTDriver mSerialPort = null;
-
-    static private Timer mReceiveTimer = null;
-    static private boolean mColorToValue = false;
+    private Timer mReceiveTimer = null;
+    private boolean mColorToValue = false;
     private CheckBox mColorCheckBox;
     private SeekBar mColorSeekBar;
-    static private int mLastColor = 0;
+    private int mLastColor = 0;
 
-    static volatile double mSpeed = 0.0;
-    static volatile double mSteeringWheelAngle = 0.0;
-    static volatile double mMPG = 0.0;
+    private volatile double mSpeed = 0.0;
+    private volatile double mSteeringWheelAngle = 0.0;
+    private volatile double mMPG = 0.0;
 
-    static int mSpeedCount = 0;
-    static int mSteeringCount = 0;
-    static int mFuelCount = 0;
-    static int mOdoCount = 0;
+    private FuelOdoHandler mFuelTotal = new FuelOdoHandler(5000);   //Delay time in milliseconds.
+    private FuelOdoHandler mOdoTotal = new FuelOdoHandler(5000);
 
-    static FuelOdoHandler mFuelTotal = new FuelOdoHandler(5000);   //Delay time in milliseconds.
-    static FuelOdoHandler mOdoTotal = new FuelOdoHandler(5000);
-
-    VehicleSpeed.Listener mSpeedListener = new VehicleSpeed.Listener() {
+    private VehicleSpeed.Listener mSpeedListener = new VehicleSpeed.Listener() {
         public void receive(Measurement measurement) {
             final VehicleSpeed speed = (VehicleSpeed) measurement;
             mSpeed = speed.getValue().doubleValue();
-            mSpeedCount++;
             if(mDataUsed == 0)
                 mNewData = true;
         }
     };
 
-    FuelConsumed.Listener mFuelConsumedListener = new FuelConsumed.Listener() {
+    private FuelConsumed.Listener mFuelConsumedListener = new FuelConsumed.Listener() {
         public void receive(Measurement measurement) {
-            mFuelCount++;
             final FuelConsumed fuel = (FuelConsumed) measurement;
             long now = System.currentTimeMillis();
             double fuelConsumed = fuel.getValue().doubleValue();
@@ -103,17 +91,15 @@ public class GaugeDriverActivity extends Activity {
         }
     };
 
-    Odometer.Listener mFineOdometerListener = new Odometer.Listener() {
+    private Odometer.Listener mFineOdometerListener = new Odometer.Listener() {
         public void receive(Measurement measurement) {
-            mOdoCount++;
             final Odometer odometer = (Odometer) measurement;
             mOdoTotal.add(odometer.getValue().doubleValue(), System.currentTimeMillis());
         }
     };
 
-    SteeringWheelAngle.Listener mSteeringWheelListener = new SteeringWheelAngle.Listener() {
+    private SteeringWheelAngle.Listener mSteeringWheelListener = new SteeringWheelAngle.Listener() {
         public void receive(Measurement measurement) {
-            mSteeringCount++;
             final SteeringWheelAngle angle = (SteeringWheelAngle) measurement;
             mSteeringWheelAngle = angle.getValue().doubleValue();
             if(mDataUsed == 2)
@@ -196,7 +182,6 @@ public class GaugeDriverActivity extends Activity {
         }
 
         mSendText = (TextView) findViewById(R.id.editTextManualData);
-        mDebugText = (TextView) findViewById(R.id.editTextDebug);
 
         mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 

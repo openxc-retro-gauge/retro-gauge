@@ -5,20 +5,20 @@ import java.util.List;
 
 public class FuelOdoHandler {
 
-    long mDuration;  //This is the time over which we do our calculations.
-    List<Long> mTimes = new ArrayList<Long>();
-    List<Double> mValues = new ArrayList<Double>();
+    private long mDuration;  //This is the time over which we do our calculations.
+    private List<Long> mTimes = new ArrayList<Long>();
+    private List<Double> mValues = new ArrayList<Double>();
 
     FuelOdoHandler(long smoothTime) {  //smoothTime units defined in the calling function.
         mDuration = smoothTime;
     }
 
-    synchronized void add(double value, long thisTime) {
+    public synchronized void add(double value, long thisTime) {
         mValues.add(value);
         mTimes.add(thisTime);
     }
 
-    synchronized double latest() {
+    public synchronized double latest() {
         if (mValues.size() > 0) {
             return mValues.get(mValues.size()-1);
         } else {
@@ -26,7 +26,7 @@ public class FuelOdoHandler {
         }
     }
 
-    synchronized double recalculate(long thisTime) {
+    public synchronized double recalculate(long thisTime) {
         long expiration = thisTime - mDuration;
         while ((mTimes.size()>2) && (mTimes.get(0) < expiration)) {
             mTimes.remove(0);
