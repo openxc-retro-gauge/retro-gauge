@@ -271,18 +271,6 @@ public class GaugeDriverActivity extends Activity {
         });
     }
 
-    private void updateDebug(final boolean clearFirst, String newMessage) {
-        final CharSequence outCS = newMessage;
-        runOnUiThread(new Runnable() {
-            public void run() {
-                if(clearFirst)
-                    mDebugText.setText(outCS);
-                else
-                    mDebugText.append(outCS);
-            }
-        });
-    }
-
     private void checkUpdatedData() {
         if(!mNewData)
             return;
