@@ -1,4 +1,4 @@
-BOARD_TAG    = pro328
+BOARD_TAG    = pro5v328
 ARDUINO_LIBS = SwitecX25
 USER_LIB_PATH = .
 
