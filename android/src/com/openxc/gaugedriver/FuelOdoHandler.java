@@ -14,20 +14,20 @@ public class FuelOdoHandler {
     FuelOdoHandler(long smoothTime) {  //smoothTime units defined in the calling function.
         mDuration = smoothTime;
     }
-    
-    synchronized void Add(double value, long thisTime) {
+
+    synchronized void add(double value, long thisTime) {
         mValues.add(value);
         mTimes.add(thisTime);
     }
 
-    synchronized double Latest() {
+    synchronized double latest() {
         if (mValues.size() > 0)
             return mValues.get(mValues.size()-1);
         else
             return 0.0;
     }
 
-    synchronized double Recalculate(long thisTime) {
+    synchronized double recalculate(long thisTime) {
         long expiration = thisTime - mDuration;
         while ((mTimes.size()>2) && (mTimes.get(0) < expiration)) {
             mTimes.remove(0);

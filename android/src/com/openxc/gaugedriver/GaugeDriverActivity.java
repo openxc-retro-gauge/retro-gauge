@@ -92,10 +92,10 @@ public class GaugeDriverActivity extends Activity {
             final FuelConsumed fuel = (FuelConsumed) measurement;
             long now = System.currentTimeMillis();
             double fuelConsumed = fuel.getValue().doubleValue();
-            mFuelTotal.Add(fuelConsumed, now);
-            double currentFuel = mFuelTotal.Recalculate(now);
+            mFuelTotal.add(fuelConsumed, now);
+            double currentFuel = mFuelTotal.recalculate(now);
             if(currentFuel > 0.00001) {
-                double currentOdo = mOdoTotal.Recalculate(now);
+                double currentOdo = mOdoTotal.recalculate(now);
                 mMPG = (currentOdo / currentFuel) * 2.35215;  //Converting from km / l to mi / gal.
             }
                if(mDataUsed == 1) {
@@ -108,7 +108,7 @@ public class GaugeDriverActivity extends Activity {
         public void receive(Measurement measurement) {
             mOdoCount++;
             final Odometer odometer = (Odometer) measurement;
-            mOdoTotal.Add(odometer.getValue().doubleValue(), System.currentTimeMillis());
+            mOdoTotal.add(odometer.getValue().doubleValue(), System.currentTimeMillis());
         }
     };
 
