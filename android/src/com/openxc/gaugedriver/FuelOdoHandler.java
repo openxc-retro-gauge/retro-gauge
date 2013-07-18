@@ -21,10 +21,11 @@ public class FuelOdoHandler {
     }
 
     synchronized double latest() {
-        if (mValues.size() > 0)
+        if (mValues.size() > 0) {
             return mValues.get(mValues.size()-1);
-        else
-            return 0.0;
+        } else {
+            return 0;
+        }
     }
 
     synchronized double recalculate(long thisTime) {
@@ -34,9 +35,10 @@ public class FuelOdoHandler {
             mValues.remove(0);
         }
 
-        if(mValues.size() >=2)
+        if(mValues.size() >= 2) {
             return mValues.get(mValues.size()-1) - mValues.get(0);
-        else
-            return 0.0;
+        } else {
+            return 0;
+        }
     }
 }
