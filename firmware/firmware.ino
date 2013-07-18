@@ -84,7 +84,7 @@ void setDisplay(byte display1, byte display2) {
 
 void getRGB(int hue, int sat, int val, int colors[3]) {
   // hue: 0-259, sat: 0-255, val (lightness): 0-255
-  int r, g, b, base;
+  int r = 0, g = 0, b = 0, base = 0;
 
   if (sat == 0) { // Achromatic color (gray).
     colors[0]=val;
@@ -145,7 +145,7 @@ void setLED(int hue, int l){
 }
 
 void parse_message(String message) {
-  for (int i = 0; i <= message.length(); i++) {
+  for (unsigned int i = 0; i <= message.length(); i++) {
     time = millis();
     if (message[i] == '(') {
       motorVal = 10*(message[i+1]-'0') + (message[i+2]-'0');
