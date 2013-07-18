@@ -262,7 +262,7 @@ public class GaugeDriverActivity extends Activity {
         connectToDevice();
     }
 
-    private void UpdateStatus(String newMessage) {
+    private void updateStatus(String newMessage) {
         final CharSequence outCS = newMessage;
         runOnUiThread(new Runnable() {
             public void run() {
@@ -271,7 +271,7 @@ public class GaugeDriverActivity extends Activity {
         });
     }
 
-    private void UpdateDebug(final boolean clearFirst, String newMessage) {
+    private void updateDebug(final boolean clearFirst, String newMessage) {
         final CharSequence outCS = newMessage;
         runOnUiThread(new Runnable() {
             public void run() {
@@ -283,7 +283,7 @@ public class GaugeDriverActivity extends Activity {
         });
     }
 
-    private void ReceiveTimerMethod() {
+    private void checkUpdatedData() {
         if(!mNewData)
             return;
 
@@ -294,11 +294,11 @@ public class GaugeDriverActivity extends Activity {
         switch(mDataUsed) {
         case 0:  //Speed
             dValue = mSpeed * 0.621371;  //Converting from kph to mph.
-            UpdateStatus("Speed: " + dValue);
+            updateStatus("Speed: " + dValue);
             break;
         case 1:  //mpg
             dValue = mMPG;
-            UpdateStatus("Mileage: " + dValue);
+            updateStatus("Mileage: " + dValue);
             break;
         case 2:  //Steering wheel angle
             dValue = mSteeringWheelAngle + 90.0;
@@ -309,10 +309,10 @@ public class GaugeDriverActivity extends Activity {
                 dValue = 180.0;
            }
             dValue /= 1.81;
-            UpdateStatus("Steering wheel angle: " + dValue);
+            updateStatus("Steering wheel angle: " + dValue);
             break;
         default:
-            Log.d(TAG, "mDataUsed got screwed up.  Fixing in ReceiveTimerMethod...");
+            Log.d(TAG, "mDataUsed got screwed up.  Fixing in checkUpdatedData...");
             mDataUsed = 0;
             dValue = mSpeed;
             runOnUiThread(new Runnable() {
@@ -343,14 +343,13 @@ public class GaugeDriverActivity extends Activity {
                 thisColor = (int)(dPercent * 259.0);
                 break;
             default:
-                Log.d(TAG, "mDataUsed got messed up in ReceiveTimerMethod, in the percentage code!");
+                Log.d(TAG, "mDataUsed got messed up in checkUpdatedData, in the percentage code!");
             }
 
             if(thisColor != mLastColor) {
                 mLastColor = thisColor;
                 String colorPacket = "<" + String.format("%03d", thisColor) + ">";
                 writeStringToSerial(colorPacket);
-                //UpdateDebug(true, colorPacket);
 
                 runOnUiThread(new Runnable() {
                     public void run() {
@@ -417,7 +416,7 @@ public class GaugeDriverActivity extends Activity {
             mReceiveTimer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    ReceiveTimerMethod();
+                    checkUpdatedData();
                 }
             }, 0, mTimerPeriod);
             Log.d(TAG, "Timer has been initialized.");
