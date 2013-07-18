@@ -15,6 +15,18 @@ This library is based on [Guy Carpenter's Gaugette project][gaugette].
 
 [gaugette]: http://guy.carpenter.id.au/gaugette/about/
 
+## Compiling with Arduino IDE
+
+After updating the submodules, open the `firmware.ino` sketch in the Arduion
+IDE. In the menu, go to `Sketch -> Import Library -> Add Library`, navigate to
+the firmware folder and import the SwitecX25 folder.
+
+In the `Tools -> Board` menu, select the `Arduino Pro or Pro Mini (3.3v 16MHz)
+w/ ATmega328` option.
+
+Finally, hit upload! You may need to manually select the right serial port if
+you have more than one device connected.
+
 ## Compiling with Makefile
 
 After updating the submodules, run `make` in the firmware directory to compile.
