@@ -1,0 +1,6 @@
+[submodule "firmware/Arduino-Makefile"]
+	path = firmware/Arduino-Makefile
+	url = http://github.com/openxc/Arduino-Makefile
+[submodule "firmware/SwitecX25"]
+	path = firmware/SwitecX25
+	url = https://github.com/openxc/SwitecX25
