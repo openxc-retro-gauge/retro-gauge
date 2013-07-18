@@ -4,7 +4,9 @@ Retro Gauge Arduino Source Code
 ## Dependencies
 
 Besides a standard Arduino development environment, the firmware also requires
-the [SwitecX25 library](http://guy.carpenter.id.au/gaugette/about/) to drive the
-stepper motor. This library is based on [Guy Carpenter's Gaugette project][gaugette]
+the [SwitecX25 library](https://github.com/clearwater/SwitecX25) to drive the
+stepper motor.
+
+This library is based on [Guy Carpenter's Gaugette project][gaugette].
 
 [gaugette]: http://guy.carpenter.id.au/gaugette/about/
