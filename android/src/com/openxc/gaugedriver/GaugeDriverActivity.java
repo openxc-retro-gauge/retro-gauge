@@ -98,13 +98,13 @@ public class GaugeDriverActivity extends Activity {
                 double currentOdo = mOdoTotal.recalculate(now);
                 mMPG = (currentOdo / currentFuel) * 2.35215;  //Converting from km / l to mi / gal.
             }
-               if(mDataUsed == 1) {
-                   mNewData = true;
+            if(mDataUsed == 1) {
+                mNewData = true;
             }
         }
     };
 
-   Odometer.Listener mFineOdometerListener = new Odometer.Listener() {
+    Odometer.Listener mFineOdometerListener = new Odometer.Listener() {
         public void receive(Measurement measurement) {
             mOdoCount++;
             final Odometer odometer = (Odometer) measurement;
@@ -139,9 +139,9 @@ public class GaugeDriverActivity extends Activity {
                 mVehicleManager.addListener(Odometer.class,
                         mFineOdometerListener);
             } catch(VehicleServiceException e) {
-                 Log.w(TAG, "Couldn't add listeners for measurements", e);
+                Log.w(TAG, "Couldn't add listeners for measurements", e);
             } catch(UnrecognizedMeasurementTypeException e) {
-                 Log.w(TAG, "Couldn't add listeners for measurements", e);
+                Log.w(TAG, "Couldn't add listeners for measurements", e);
             }
         }
 
@@ -181,19 +181,19 @@ public class GaugeDriverActivity extends Activity {
 
         mStatusText = (TextView) findViewById(R.id.textViewStatus);
         switch(mDataUsed){
-        case 0:
-            mStatusText.setText("Using Vehicle Speed Data");
-            break;
-        case 1:
-            mStatusText.setText("Using Vehicle Mileage Data");
-            break;
-        case 2:
-            mStatusText.setText("Using Steering Wheel Angle Data");
-            break;
-        default:
-            Log.d(TAG, "mDataUsed got screwed up somehow.  Fixing in onCreate...");
-            mStatusText.setText("Using Vehicle Speed Data");
-            mDataUsed = 0;
+            case 0:
+                mStatusText.setText("Using Vehicle Speed Data");
+                break;
+            case 1:
+                mStatusText.setText("Using Vehicle Mileage Data");
+                break;
+            case 2:
+                mStatusText.setText("Using Steering Wheel Angle Data");
+                break;
+            default:
+                Log.d(TAG, "mDataUsed got screwed up somehow.  Fixing in onCreate...");
+                mStatusText.setText("Using Vehicle Speed Data");
+                mDataUsed = 0;
         }
 
         mSendText = (TextView) findViewById(R.id.editTextManualData);
@@ -222,23 +222,23 @@ public class GaugeDriverActivity extends Activity {
     }
 
     private void connectToDevice() {
-         if(mSerialPort == null) {
-             mSerialPort = new FTDriver(mUsbManager);
-         }
+        if(mSerialPort == null) {
+            mSerialPort = new FTDriver(mUsbManager);
+        }
 
-         if(mSerialPort.isConnected()) {
-             //mSerialPort.end();
-             return;
-         }
+        if(mSerialPort.isConnected()) {
+            //mSerialPort.end();
+            return;
+        }
 
-         mSerialPort.begin(9600);
-         if(!mSerialPort.isConnected()) {
-             Log.d(TAG, "mSerialPort.begin() failed.");
-         } else {
-             Log.d(TAG, "mSerialPort.begin() success!.");
-             if(mReceiveTimer == null)   //Start the updates.
-                 onTimerToggle(null);
-         }
+        mSerialPort.begin(9600);
+        if(!mSerialPort.isConnected()) {
+            Log.d(TAG, "mSerialPort.begin() failed.");
+        } else {
+            Log.d(TAG, "mSerialPort.begin() success!.");
+            if(mReceiveTimer == null)   //Start the updates.
+                onTimerToggle(null);
+        }
     }
 
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
@@ -267,42 +267,43 @@ public class GaugeDriverActivity extends Activity {
     }
 
     private void checkUpdatedData() {
-        if(!mNewData)
+        if(!mNewData) {
             return;
+        }
 
         mNewData = false;
 
         //Send data
         double dValue = 0.0;
         switch(mDataUsed) {
-        case 0:  //Speed
-            dValue = mSpeed * 0.621371;  //Converting from kph to mph.
-            updateStatus("Speed: " + dValue);
-            break;
-        case 1:  //mpg
-            dValue = mMPG;
-            updateStatus("Mileage: " + dValue);
-            break;
-        case 2:  //Steering wheel angle
-            dValue = mSteeringWheelAngle + 90.0;
-            //Make sure we're never sending a negative number here...
-            if(dValue < 0.0) {
-                dValue = 0.0;
-            } else if(dValue > 180.0) {
-                dValue = 180.0;
-           }
-            dValue /= 1.81;
-            updateStatus("Steering wheel angle: " + dValue);
-            break;
-        default:
-            Log.d(TAG, "mDataUsed got screwed up.  Fixing in checkUpdatedData...");
-            mDataUsed = 0;
-            dValue = mSpeed;
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    mStatusText.setText("Using Vehicle Speed Data");
+            case 0:  //Speed
+                dValue = mSpeed * 0.621371;  //Converting from kph to mph.
+                updateStatus("Speed: " + dValue);
+                break;
+            case 1:  //mpg
+                dValue = mMPG;
+                updateStatus("Mileage: " + dValue);
+                break;
+            case 2:  //Steering wheel angle
+                dValue = mSteeringWheelAngle + 90.0;
+                //Make sure we're never sending a negative number here...
+                if(dValue < 0.0) {
+                    dValue = 0.0;
+                } else if(dValue > 180.0) {
+                    dValue = 180.0;
                 }
-            });
+                dValue /= 1.81;
+                updateStatus("Steering wheel angle: " + dValue);
+                break;
+            default:
+                Log.d(TAG, "mDataUsed got screwed up.  Fixing in checkUpdatedData...");
+                mDataUsed = 0;
+                dValue = mSpeed;
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        mStatusText.setText("Using Vehicle Speed Data");
+                    }
+                });
         }
 
         double dPercent = (dValue - mGaugeMin) / mGaugeRange;
@@ -315,18 +316,18 @@ public class GaugeDriverActivity extends Activity {
         if(mColorToValue) {
             int thisColor = 0;
             switch(mDataUsed) {
-            //colors: 0-259.  Red == 0, Yellow == 65, Green == 110, Blue == 170, Purple == 260.
-            case 0: //Speed: 0mph = green, 80mph = red.
-                thisColor = 110 - (int)(dPercent * 110.0);
-                break;
-            case 1: //Mileage: 50mpg = green, 0mpg = red.
-                thisColor = (int)(dPercent * 110.0);
-                break;
-            case 2: //Steering wheel angle:  Sweep through the spectrum.
-                thisColor = (int)(dPercent * 259.0);
-                break;
-            default:
-                Log.d(TAG, "mDataUsed got messed up in checkUpdatedData, in the percentage code!");
+                //colors: 0-259.  Red == 0, Yellow == 65, Green == 110, Blue == 170, Purple == 260.
+                case 0: //Speed: 0mph = green, 80mph = red.
+                    thisColor = 110 - (int)(dPercent * 110.0);
+                    break;
+                case 1: //Mileage: 50mpg = green, 0mpg = red.
+                    thisColor = (int)(dPercent * 110.0);
+                    break;
+                case 2: //Steering wheel angle:  Sweep through the spectrum.
+                    thisColor = (int)(dPercent * 259.0);
+                    break;
+                default:
+                    Log.d(TAG, "mDataUsed got messed up in checkUpdatedData, in the percentage code!");
             }
 
             if(thisColor != mLastColor) {
@@ -356,7 +357,7 @@ public class GaugeDriverActivity extends Activity {
         }
 
         String dataPacket = "(" + String.format("%02d", value) + "|" +
-                String.format("%02d", iPercent) + ")";
+            String.format("%02d", iPercent) + ")";
         writeStringToSerial(dataPacket);
     }
 
@@ -376,10 +377,11 @@ public class GaugeDriverActivity extends Activity {
     }
 
     public void onExit(View view){
-        if(mReceiveTimer != null){
+        if(mReceiveTimer != null) {
             mReceiveTimer.cancel();
         }
-        if(mSerialPort != null){
+
+        if(mSerialPort != null) {
             mSerialPort.end();
         }
 
@@ -388,6 +390,7 @@ public class GaugeDriverActivity extends Activity {
             unbindService(mConnection);
             mVehicleManager = null;
         }
+
         finish();
         System.exit(0);
     }
