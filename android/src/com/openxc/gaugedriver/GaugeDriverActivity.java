@@ -376,14 +376,6 @@ public class GaugeDriverActivity extends Activity {
         String dataPacket = "(" + String.format("%02d", value) + "|" +
                 String.format("%02d", iPercent) + ")";
         writeStringToSerial(dataPacket);
-        //UpdateDebug(false, dataPacket + "\n");
-//        mDebugCounter--;
-//        if (mDebugCounter < 1) {
-//            UpdateDebug(true, "Latest Fuel: " + mFuelTotal.Latest() + "\nFuel Updates: " + mFuelCount +
-//                "\nLatest Odometer: " + mOdoTotal.Latest() + "\nOdometer Updates: " + mOdoCount +
-//                "\nTotal MPG: " + ((mOdoTotal.Latest()/mFuelTotal.Latest())*2.35215));
-//            mDebugCounter = 3;
-//        }
     }
 
     private void writeStringToSerial(String outString){
@@ -439,38 +431,30 @@ public class GaugeDriverActivity extends Activity {
 
     public void onSpeedClick(View view) {
         mDataUsed = 0;
-
         mStatusText.setText("Using Vehicle Speed Data");
         mGaugeMin = 0.0;
         mGaugeRange = 120.0;
-
         mNewData = true;
     }
 
     public void onMPGClick(View view) {
         mDataUsed = 1;
-
         mStatusText.setText("Using Vehicle Mileage Data");
-
         mGaugeMin = 0.0;
         mGaugeRange = 50.0;
-
         mNewData = true;
     }
 
     public void onSteeringClick(View view) {
         mDataUsed = 2;
-
         mStatusText.setText("Using SteeringWheel Angle Data");
         mGaugeMin = 0.0;
         mGaugeRange = 100.0;
-
         mNewData = true;
     }
 
     public void onColorCheckBoxClick(View view) {
         mColorToValue = mColorCheckBox.isChecked();
-
         mColorSeekBar.setEnabled(!mColorToValue);
     }
 
