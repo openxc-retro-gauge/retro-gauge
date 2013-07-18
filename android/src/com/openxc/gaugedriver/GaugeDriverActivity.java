@@ -180,7 +180,7 @@ public class GaugeDriverActivity extends Activity {
         });
 
         mStatusText = (TextView) findViewById(R.id.textViewStatus);
-        switch (mDataUsed){
+        switch(mDataUsed){
         case 0:
             mStatusText.setText("Using Vehicle Speed Data");
             break;
@@ -205,14 +205,13 @@ public class GaugeDriverActivity extends Activity {
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(mBroadcastReceiver, filter);
 
-        if (mReceiveTimer != null)  //If the timer is running
-        {
+        if(mReceiveTimer != null)  //If the timer is running {
             onTimerToggle(null);
             onTimerToggle(null);    //Reset the timer so the slider updates are pointing at the right Activity.
         }
 
         mToggleButton = (ToggleButton) findViewById(R.id.toggleButtonTimer);
-        if (mReceiveTimer != null)  {  //If the timer is running
+        if(mReceiveTimer != null)  {  //If the timer is running
             mToggleButton.setChecked(true);
         } else {
             mToggleButton.setChecked(false);
@@ -224,17 +223,16 @@ public class GaugeDriverActivity extends Activity {
 
     private void connectToDevice() {
          if(mSerialPort == null) {
-        	 mSerialPort = new FTDriver(mUsbManager);
+             mSerialPort = new FTDriver(mUsbManager);
          }
-         
+
          if(mSerialPort.isConnected()) {
-        	 //mSerialPort.end();
-        	 return;
+             //mSerialPort.end();
+             return;
          }
 
          mSerialPort.begin(9600);
-         if (!mSerialPort.isConnected())
-         {
+         if(!mSerialPort.isConnected()) {
              Log.d(TAG, "mSerialPort.begin() failed.");
          } else {
              Log.d(TAG, "mSerialPort.begin() success!.");
@@ -252,8 +250,8 @@ public class GaugeDriverActivity extends Activity {
                 Bundle extras = intent.getExtras();
                 UsbDevice lostDevice = (UsbDevice)extras.get("device");
                 if(lostDevice.equals(mSerialPort.getDevice())) {
-                	mSerialPort.end();
-                } 
+                    mSerialPort.end();
+                }
             }
         }
     };
@@ -285,8 +283,7 @@ public class GaugeDriverActivity extends Activity {
         });
     }
 
-    private void ReceiveTimerMethod()
-    {
+    private void ReceiveTimerMethod() {
         if(!mNewData)
             return;
 
@@ -306,10 +303,11 @@ public class GaugeDriverActivity extends Activity {
         case 2:  //Steering wheel angle
             dValue = mSteeringWheelAngle + 90.0;
             //Make sure we're never sending a negative number here...
-            if (dValue < 0.0)
+            if(dValue < 0.0) {
                 dValue = 0.0;
-            else if (dValue > 180.0)
+            } else if(dValue > 180.0) {
                 dValue = 180.0;
+           }
             dValue /= 1.81;
             UpdateStatus("Steering wheel angle: " + dValue);
             break;
@@ -325,14 +323,15 @@ public class GaugeDriverActivity extends Activity {
         }
 
         double dPercent = (dValue - mGaugeMin) / mGaugeRange;
-        if (dPercent > 1.0)
+        if(dPercent > 1.0) {
             dPercent = 1.0;
-        else if (dPercent < 0.0)
+        } else if(dPercent < 0.0) {
             dPercent = 0.0;
+        }
 
         if(mColorToValue) {
             int thisColor = 0;
-            switch (mDataUsed) {
+            switch(mDataUsed) {
             //colors: 0-259.  Red == 0, Yellow == 65, Green == 110, Blue == 170, Purple == 260.
             case 0: //Speed: 0mph = green, 80mph = red.
                 thisColor = 110 - (int)(dPercent * 110.0);
@@ -347,7 +346,7 @@ public class GaugeDriverActivity extends Activity {
                 Log.d(TAG, "mDataUsed got messed up in ReceiveTimerMethod, in the percentage code!");
             }
 
-            if (thisColor != mLastColor) {
+            if(thisColor != mLastColor) {
                 mLastColor = thisColor;
                 String colorPacket = "<" + String.format("%03d", thisColor) + ">";
                 writeStringToSerial(colorPacket);
@@ -363,17 +362,16 @@ public class GaugeDriverActivity extends Activity {
 
         int iPercent = (int)(100.0 * dPercent);
 
-        if(iPercent > 99)
-        {
+        if(iPercent > 99) {
             iPercent = 99;
-        } else if (iPercent < 0)
-        {
+        } else if(iPercent < 0) {
             iPercent = 0;
         }
 
         int value = (int)dValue;
-        if (value > 99)
+        if(value > 99) {
             value = 99;  //We've only got two digits to work with.
+        }
 
         String dataPacket = "(" + String.format("%02d", value) + "|" +
                 String.format("%02d", iPercent) + ")";
@@ -392,25 +390,25 @@ public class GaugeDriverActivity extends Activity {
         if(mSerialPort.isConnected()) {
             char[] outMessage = outString.toCharArray();
             byte outBuffer[] = new byte[128];
-            for(int i=0; i<outString.length(); i++)
-            {
+            for(int i=0; i<outString.length(); i++) {
                 outBuffer[i] = (byte)outMessage[i];
             }
             try {
                 mSerialPort.write(outBuffer,  outString.length());
-            } catch (Exception e) {
+            } catch(Exception e) {
                 Log.d(TAG, "mSerialPort.write() just threw an exception.  Is the cable plugged in?");
             }
         }
     }
 
     public void onExit(View view){
-        if (mReceiveTimer != null){
+        if(mReceiveTimer != null){
             mReceiveTimer.cancel();
         }
-        if (mSerialPort != null){
+        if(mSerialPort != null){
             mSerialPort.end();
         }
+
         if(mVehicleManager != null) {
             Log.i(TAG, "Unbinding from vehicle service before exit");
             unbindService(mConnection);
@@ -421,8 +419,7 @@ public class GaugeDriverActivity extends Activity {
     }
 
     public void onTimerToggle(View view) {
-        if(mReceiveTimer == null)
-        {
+        if(mReceiveTimer == null) {
             mReceiveTimer = new Timer();
 
             mReceiveTimer.schedule(new TimerTask() {
@@ -432,8 +429,7 @@ public class GaugeDriverActivity extends Activity {
                 }
             }, 0, mTimerPeriod);
             Log.d(TAG, "Timer has been initialized.");
-        } else
-        {
+        } else {
             mReceiveTimer.cancel();
             mReceiveTimer.purge();
             mReceiveTimer = null;
