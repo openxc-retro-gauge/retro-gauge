@@ -31,7 +31,8 @@ that can send various vehicle measurements to display on the gauge.
 
 ## Data Format
 
-The Retro Gauge can receive two types of data packet.
+The Retro Gauge can receive two types of data packet over the UART (i.e. FTDI)
+connection at baud 9600:
 
 * Color data is delivered with three digits within angle brackets. `<###>`
   Valid values are between 0 and 259.
