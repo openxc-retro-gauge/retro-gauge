@@ -1,10 +1,10 @@
 package com.openxc.gaugedriver;
 
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import jp.ksksue.driver.serial.FTDriver;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -25,9 +25,9 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.openxc.VehicleManager;
-import com.openxc.measurements.Odometer;
 import com.openxc.measurements.FuelConsumed;
 import com.openxc.measurements.Measurement;
+import com.openxc.measurements.Odometer;
 import com.openxc.measurements.SteeringWheelAngle;
 import com.openxc.measurements.UnrecognizedMeasurementTypeException;
 import com.openxc.measurements.VehicleSpeed;

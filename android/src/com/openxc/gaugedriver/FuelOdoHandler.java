@@ -3,8 +3,6 @@ package com.openxc.gaugedriver;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.util.Log;
-
 public class FuelOdoHandler {
 
     long mDuration;  //This is the time over which we do our calculations.
