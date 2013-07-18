@@ -205,7 +205,7 @@ public class GaugeDriverActivity extends Activity {
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(mBroadcastReceiver, filter);
 
-        if(mReceiveTimer != null)  //If the timer is running {
+        if(mReceiveTimer != null) {
             onTimerToggle(null);
             onTimerToggle(null);    //Reset the timer so the slider updates are pointing at the right Activity.
         }
