@@ -69,8 +69,8 @@ void ledWrite(int r, int g, int b){
   analogWrite(ledBluePin, 255-b);
 }
 
-void setLED(int hue, int l){
+void setLED(int hue, int saturation, int luminosity){
   int col[3] = {0, 0, 0};
-  getRGB(hue, 255, l, col);
+  getRGB(hue, saturation, luminosity, col);
   ledWrite(col[0], col[1], col[2]);
 }

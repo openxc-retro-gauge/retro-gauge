@@ -18,17 +18,17 @@ void initDisplay(int dataPin, int clockPin, int latchPin) {
     displayDataPin = dataPin;
     displayClockPin = clockPin;
     displayLatchPin = latchPin;
-    clearDisplay(dataPin, clockPin, latchPin);
+    clearDisplay();
 }
 
-void clearDisplay(int dataPin, int clockPin, int latchPin) {
+void clearDisplay() {
   //Prepare 595 to received data
-  digitalWrite(latchPin, LOW);
+  digitalWrite(displayLatchPin, LOW);
   //Shift data to 595
-  shiftOut(dataPin, clockPin, LSBFIRST, NONE);
-  shiftOut(dataPin,clockPin, LSBFIRST, NONE);
+  shiftOut(displayDataPin, displayClockPin, LSBFIRST, NONE);
+  shiftOut(displayDataPin, displayClockPin, LSBFIRST, NONE);
   //Set latch to high to send data
-  digitalWrite(latchPin, HIGH);
+  digitalWrite(displayLatchPin, HIGH);
 }
 
 void setDisplay(int display1, int display2) {

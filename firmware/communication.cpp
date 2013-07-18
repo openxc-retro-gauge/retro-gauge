@@ -37,7 +37,7 @@ void parse_message(String message) {
 
         if(message[i] == '<') {
             int rgbValue = 100*(message[i+1] -'0') + 10*(message[i+2]-'0') + (message[i+3]-'0');
-            setLED(rgbValue, 255);
+            setLED(rgbValue, 255, 255);
         }
     }
 }
