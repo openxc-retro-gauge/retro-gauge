@@ -3,6 +3,10 @@ Retro Gauge Arduino Source Code
 
 ## Dependencies
 
+Run this from the top level directory to download the dependencies:
+
+    $ git submodule update --init
+
 Besides a standard Arduino development environment, the firmware also requires
 the [SwitecX25 library](https://github.com/clearwater/SwitecX25) to drive the
 stepper motor.
@@ -10,3 +14,14 @@ stepper motor.
 This library is based on [Guy Carpenter's Gaugette project][gaugette].
 
 [gaugette]: http://guy.carpenter.id.au/gaugette/about/
+
+## Compiling with Makefile
+
+After updating the submodules, run `make` in the firmware directory to compile.
+Run `make upload` to flash an attached gauge.
+
+The Makefile will attempt to automatically determine the name of the attached
+port, but you may need to specify it manually with `MONITOR_PORT` if it doesn't
+work. For example, if your device shows up as /dev/ttyUSB1:
+
+    MONITOR_PORT=/dev/ttyUSB1 make upload
