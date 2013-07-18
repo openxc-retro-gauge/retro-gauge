@@ -246,12 +246,7 @@ public class GaugeDriverActivity extends Activity {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if(UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
-                Log.d(TAG, "Device detached");
-                Bundle extras = intent.getExtras();
-                UsbDevice lostDevice = (UsbDevice)extras.get("device");
-                if(lostDevice.equals(mSerialPort.getDevice())) {
-                    mSerialPort.end();
-                }
+                mSerialPort.usbDetached(intent);
             }
         }
     };
