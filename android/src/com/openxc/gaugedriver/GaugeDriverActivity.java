@@ -24,6 +24,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.openxc.NoValueException;
 import com.openxc.VehicleManager;
 import com.openxc.measurements.FuelConsumed;
 import com.openxc.measurements.Measurement;
@@ -34,10 +35,12 @@ import com.openxc.measurements.VehicleSpeed;
 import com.openxc.remote.VehicleServiceException;
 
 public class GaugeDriverActivity extends Activity {
-
     private final String TAG = "GaugeDriver";
     private final int GAUGE_UPDATE_PERIOD_MS = 10;
-
+    private final double MILES_PER_KM = 0.621371;
+    private final double GALLONS_PER_LITER = 0.264172;
+    private final double KM_L_TO_MPG_MULTIPLIER =
+            MILES_PER_KM / GALLONS_PER_LITER;
 
     private TextView mStatusText;
     private TextView mSendText;
@@ -61,11 +64,10 @@ public class GaugeDriverActivity extends Activity {
 
     private volatile double mSpeed = 0.0;
     private volatile double mSteeringWheelAngle = 0.0;
-    private volatile double mMPG = 0.0;
 
-    // Delay time in milliseconds.
-    private FuelOdoHandler mFuelTotal = new FuelOdoHandler(5000);
-    private FuelOdoHandler mOdoTotal = new FuelOdoHandler(5000);
+    private Odometer mLastOdometer;
+    private FuelConsumed mLastFuelConsumed;
+    private RollingAverage mRollingMpg = new RollingAverage();
 
     /** Called when the activity is first created. */
     @Override
@@ -215,7 +217,7 @@ public class GaugeDriverActivity extends Activity {
             value = mSpeed * 0.621371;  //Converting from kph to mph.
             updateStatus("Speed: " + value);
         } else if(mActiveDataType == FuelConsumed.class) {
-            value = mMPG;
+            value = mRollingMpg.getAverage();
             updateStatus("Mileage: " + value);
         } else if(mActiveDataType == SteeringWheelAngle.class) {
             value = mSteeringWheelAngle + 90.0;
@@ -349,31 +351,76 @@ public class GaugeDriverActivity extends Activity {
         }
     };
 
+    private void recalculateFuelEfficiency(FuelConsumed fuelConsumed,
+            Odometer odometer) {
+        if(fuelConsumed == null) {
+            try {
+                fuelConsumed = (FuelConsumed) mVehicleManager.get(
+                        FuelConsumed.class);
+            } catch(UnrecognizedMeasurementTypeException e) {
+                Log.w(TAG, "Couldn't get current fuel consumption value, " +
+                        "can't calulate fuel efficiency", e);
+            } catch(NoValueException e) {
+                Log.w(TAG, "Couldn't get current fuel consumption value, " +
+                        "can't calulate fuel efficiency", e);
+            }
+        }
+
+        if(odometer == null) {
+            try {
+                odometer = (Odometer) mVehicleManager.get(Odometer.class);
+            } catch(UnrecognizedMeasurementTypeException e) {
+                Log.w(TAG, "Couldn't get current odometer value, " +
+                        "can't calulate fuel efficiency", e);
+            } catch(NoValueException e) {
+                Log.w(TAG, "Couldn't get current odometer value, " +
+                        "can't calulate fuel efficiency", e);
+            }
+        }
+
+        if(mLastOdometer == null) {
+            mLastOdometer = odometer;
+        }
+
+        if(mLastFuelConsumed == null) {
+            mLastFuelConsumed = fuelConsumed;
+        }
+
+        if(odometer != null && fuelConsumed != null && mLastOdometer != null &&
+                mLastFuelConsumed != null) {
+            // calculate Km / L from measuremnets and convert to Miles / Gallon
+            double deltaOdo = odometer.getValue().doubleValue() -
+                    mLastOdometer.getValue().doubleValue();
+            double deltaFuel = fuelConsumed.getValue().doubleValue() -
+                    mLastFuelConsumed.getValue().doubleValue();
+
+            if(deltaOdo > .01 || deltaFuel > .01) {
+                mRollingMpg.add((deltaOdo / Math.max(0.000001, deltaFuel))
+                        * KM_L_TO_MPG_MULTIPLIER);
+
+                mLastOdometer = odometer;
+                mLastFuelConsumed = fuelConsumed;
+
+                if(mActiveDataType == FuelConsumed.class) {
+                    mNewData = true;
+                }
+            }
+
+        }
+
+    }
+
+
     private FuelConsumed.Listener mFuelConsumedListener =
             new FuelConsumed.Listener() {
         public void receive(Measurement measurement) {
-            final FuelConsumed fuel = (FuelConsumed) measurement;
-            long now = System.currentTimeMillis();
-            double fuelConsumed = fuel.getValue().doubleValue();
-            mFuelTotal.add(fuelConsumed, now);
-            double currentFuel = mFuelTotal.recalculate(now);
-            if(currentFuel > 0.00001) {
-                double currentOdo = mOdoTotal.recalculate(now);
-                // Converting from km / l to mi / gal.
-                mMPG = (currentOdo / currentFuel) * 2.35215;
-            }
-
-            if(mActiveDataType == FuelConsumed.class) {
-                mNewData = true;
-            }
+            recalculateFuelEfficiency((FuelConsumed)measurement, null);
         }
     };
 
     private Odometer.Listener mFineOdometerListener = new Odometer.Listener() {
         public void receive(Measurement measurement) {
-            final Odometer odometer = (Odometer) measurement;
-            mOdoTotal.add(odometer.getValue().doubleValue(),
-                    System.currentTimeMillis());
+            recalculateFuelEfficiency(null, (Odometer)measurement);
         }
     };
 
