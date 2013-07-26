@@ -22,6 +22,7 @@ import android.widget.CheckBox;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.openxc.VehicleManager;
@@ -119,14 +120,6 @@ public class GaugeDriverActivity extends Activity {
         configureTimer(false);
         configureTimer(true);
 
-        ToggleButton mToggleButton = (ToggleButton) findViewById
-            (R.id.toggleButtonTimer);
-        if(mReceiveTimer != null)  {  //If the timer is running
-            mToggleButton.setChecked(true);
-        } else {
-            mToggleButton.setChecked(false);
-        }
-
         bindService(new Intent(this, VehicleManager.class),
                 mConnection, Context.BIND_AUTO_CREATE);
     }
@@ -135,6 +128,14 @@ public class GaugeDriverActivity extends Activity {
     public void onResume() {
         super.onResume();
         connectToDevice();
+        
+        ToggleButton mToggleButton = (ToggleButton) findViewById
+                (R.id.toggleButtonTimer);
+        if(mReceiveTimer != null)  {  //If the timer is running
+            mToggleButton.setChecked(true);
+        } else {
+            mToggleButton.setChecked(false);
+        }
     }
 
     public void onExit(View view){
@@ -315,6 +316,7 @@ public class GaugeDriverActivity extends Activity {
         }
 
         if(mSerialPort.isConnected()) {
+            showToast("Still connected");
             return;
         }
 
@@ -322,7 +324,8 @@ public class GaugeDriverActivity extends Activity {
         if(!mSerialPort.isConnected()) {
             Log.d(TAG, "mSerialPort.begin() failed.");
         } else {
-            Log.d(TAG, "mSerialPort.begin() success!.");
+            Log.d(TAG, "mSerialPort.begin() success!");
+            showToast("Device connected");
             if(mReceiveTimer == null) {
                 configureTimer(true);
             }
@@ -333,8 +336,12 @@ public class GaugeDriverActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if(UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+            if(UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action) && 
+                    mSerialPort.isConnected()) {
                 mSerialPort.usbDetached(intent);
+                if(!mSerialPort.isConnected()) {
+                    showToast("Device disconnected");
+                }
             }
         }
     };
@@ -433,5 +440,9 @@ public class GaugeDriverActivity extends Activity {
                         "is the cable attached?");
             }
         }
+    }
+    
+    private void showToast(String message) {
+        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
     }
 }
