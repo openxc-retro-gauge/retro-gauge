@@ -25,6 +25,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.openxc.NoValueException;
 import com.openxc.VehicleManager;
 import com.openxc.measurements.FuelConsumed;
 import com.openxc.measurements.Measurement;
@@ -35,10 +36,13 @@ import com.openxc.measurements.VehicleSpeed;
 import com.openxc.remote.VehicleServiceException;
 
 public class GaugeDriverActivity extends Activity {
-
     private final String TAG = "GaugeDriver";
     private final int GAUGE_UPDATE_PERIOD_MS = 10;
-
+    private final double MPH_PER_KPH = 0.621371;
+    private final double MILES_PER_KM = 0.621371;
+    private final double GALLONS_PER_LITER = 0.264172;
+    private final double KM_L_TO_MPG_MULTIPLIER =
+            MILES_PER_KM / GALLONS_PER_LITER;
 
     private TextView mStatusText;
     private TextView mSendText;
@@ -49,24 +53,18 @@ public class GaugeDriverActivity extends Activity {
 
     private Class<? extends Measurement> mActiveDataType = VehicleSpeed.class;
 
-    private boolean mNewData;
-
     private double mGaugeMin = 0;
     private double mGaugeRange = 80;
 
-    private Timer mReceiveTimer = null;
-    private boolean mColorToValue = false;
+    private Timer mReceiveTimer;
+    private boolean mColorToValue;
     private CheckBox mColorCheckBox;
     private SeekBar mColorSeekBar;
     private int mLastColor = 0;
 
-    private volatile double mSpeed = 0.0;
-    private volatile double mSteeringWheelAngle = 0.0;
-    private volatile double mMPG = 0.0;
-
-    // Delay time in milliseconds.
-    private FuelOdoHandler mFuelTotal = new FuelOdoHandler(5000);
-    private FuelOdoHandler mOdoTotal = new FuelOdoHandler(5000);
+    private Odometer mLastOdometer;
+    private FuelConsumed mLastFuelConsumed;
+    private RollingAverage mRollingMpg = new RollingAverage();
 
     /** Called when the activity is first created. */
     @Override
@@ -117,9 +115,6 @@ public class GaugeDriverActivity extends Activity {
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(mBroadcastReceiver, filter);
 
-        configureTimer(false);
-        configureTimer(true);
-
         bindService(new Intent(this, VehicleManager.class),
                 mConnection, Context.BIND_AUTO_CREATE);
     }
@@ -166,7 +161,6 @@ public class GaugeDriverActivity extends Activity {
         mStatusText.setText("Using Vehicle Speed Data");
         mGaugeMin = 0.0;
         mGaugeRange = 120.0;
-        mNewData = true;
     }
 
     public void onMPGClick(View view) {
@@ -174,7 +168,6 @@ public class GaugeDriverActivity extends Activity {
         mStatusText.setText("Using Vehicle Mileage Data");
         mGaugeMin = 0.0;
         mGaugeRange = 50.0;
-        mNewData = true;
     }
 
     public void onSteeringClick(View view) {
@@ -182,7 +175,6 @@ public class GaugeDriverActivity extends Activity {
         mStatusText.setText("Using SteeringWheel Angle Data");
         mGaugeMin = 0.0;
         mGaugeRange = 100.0;
-        mNewData = true;
     }
 
     public void onColorCheckBoxClick(View view) {
@@ -204,39 +196,48 @@ public class GaugeDriverActivity extends Activity {
     }
 
     private void checkUpdatedData() {
-        if(!mNewData) {
+        if(mVehicleManager == null) {
+            Log.d(TAG, "Vehicle manager not connected, not updating");
             return;
         }
 
-        mNewData = false;
-
-        //Send data
         double value = 0.0;
         if(mActiveDataType == VehicleSpeed.class) {
-            value = mSpeed * 0.621371;  //Converting from kph to mph.
-            updateStatus("Speed: " + value);
+            String error = "Couldn't get current speed, can't calulate fuel efficiency";
+            try {
+                VehicleSpeed speed = (VehicleSpeed) mVehicleManager.get(VehicleSpeed.class);
+                value = speed.getValue().doubleValue() * MPH_PER_KPH;
+                updateStatus("Speed: " + value);
+            } catch(UnrecognizedMeasurementTypeException e) {
+                Log.w(TAG, error, e);
+            } catch(NoValueException e) {
+                Log.w(TAG, error, e);
+            }
         } else if(mActiveDataType == FuelConsumed.class) {
-            value = mMPG;
+            value = mRollingMpg.getAverage();
             updateStatus("Mileage: " + value);
         } else if(mActiveDataType == SteeringWheelAngle.class) {
-            value = mSteeringWheelAngle + 90.0;
-            //Make sure we're never sending a negative number here...
-            if(value < 0.0) {
-                value = 0.0;
-            } else if(value > 180.0) {
-                value = 180.0;
-            }
-            value /= 1.81;
-            updateStatus("Steering wheel angle: " + value);
-        } else {
-            Log.d(TAG, "Active data type got screwed up, repairing");
-            mActiveDataType = SteeringWheelAngle.class;
-            value = mSpeed;
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    mStatusText.setText("Using Vehicle Speed Data");
+            String error = "Couldn't get current speed, can't calulate fuel efficiency";
+            try {
+                SteeringWheelAngle steeringWheelAngle = (SteeringWheelAngle)
+                        mVehicleManager.get(SteeringWheelAngle.class);
+                value = steeringWheelAngle.getValue().doubleValue() + 90.0;
+                //Make sure we're never sending a negative number here...
+                if(value < 0.0) {
+                    value = 0.0;
+                } else if(value > 180.0) {
+                    value = 180.0;
                 }
-            });
+                value /= 1.81;
+                updateStatus("Steering wheel angle: " + value);
+            } catch(UnrecognizedMeasurementTypeException e) {
+                Log.w(TAG, error, e);
+            } catch(NoValueException e) {
+                Log.w(TAG, error, e);
+            }
+        } else {
+            Log.d(TAG, "Active data type unknown, switching to speed");
+            mActiveDataType = SteeringWheelAngle.class;
         }
 
         double percent = (value - mGaugeMin) / mGaugeRange;
@@ -346,52 +347,71 @@ public class GaugeDriverActivity extends Activity {
         }
     };
 
-    private VehicleSpeed.Listener mSpeedListener = new VehicleSpeed.Listener() {
-        public void receive(Measurement measurement) {
-            final VehicleSpeed speed = (VehicleSpeed) measurement;
-            mSpeed = speed.getValue().doubleValue();
-            if(mActiveDataType == VehicleSpeed.class) {
-                mNewData = true;
+    private void recalculateFuelEfficiency(FuelConsumed fuelConsumed,
+            Odometer odometer) {
+        if(fuelConsumed == null) {
+            try {
+                fuelConsumed = (FuelConsumed) mVehicleManager.get(
+                        FuelConsumed.class);
+            } catch(UnrecognizedMeasurementTypeException e) {
+                Log.w(TAG, "Couldn't get current fuel consumption value, " +
+                        "can't calulate fuel efficiency", e);
+            } catch(NoValueException e) {
+                Log.w(TAG, "Couldn't get current fuel consumption value, " +
+                        "can't calulate fuel efficiency", e);
             }
         }
-    };
+
+        if(odometer == null) {
+            try {
+                odometer = (Odometer) mVehicleManager.get(Odometer.class);
+            } catch(UnrecognizedMeasurementTypeException e) {
+                Log.w(TAG, "Couldn't get current odometer value, " +
+                        "can't calulate fuel efficiency", e);
+            } catch(NoValueException e) {
+                Log.w(TAG, "Couldn't get current odometer value, " +
+                        "can't calulate fuel efficiency", e);
+            }
+        }
+
+        if(mLastOdometer == null) {
+            mLastOdometer = odometer;
+        }
+
+        if(mLastFuelConsumed == null) {
+            mLastFuelConsumed = fuelConsumed;
+        }
+
+        if(odometer != null && fuelConsumed != null && mLastOdometer != null &&
+                mLastFuelConsumed != null) {
+            // calculate Km / L from measuremnets and convert to Miles / Gallon
+            double deltaOdo = odometer.getValue().doubleValue() -
+                    mLastOdometer.getValue().doubleValue();
+            double deltaFuel = fuelConsumed.getValue().doubleValue() -
+                    mLastFuelConsumed.getValue().doubleValue();
+
+            if(deltaOdo > .01 || deltaFuel > .01) {
+                mRollingMpg.add((deltaOdo / Math.max(0.000001, deltaFuel))
+                        * KM_L_TO_MPG_MULTIPLIER);
+                mLastOdometer = odometer;
+                mLastFuelConsumed = fuelConsumed;
+            }
+
+        }
+
+    }
+
 
     private FuelConsumed.Listener mFuelConsumedListener =
             new FuelConsumed.Listener() {
         public void receive(Measurement measurement) {
-            final FuelConsumed fuel = (FuelConsumed) measurement;
-            long now = System.currentTimeMillis();
-            double fuelConsumed = fuel.getValue().doubleValue();
-            mFuelTotal.add(fuelConsumed, now);
-            double currentFuel = mFuelTotal.recalculate(now);
-            if(currentFuel > 0.00001) {
-                double currentOdo = mOdoTotal.recalculate(now);
-                // Converting from km / l to mi / gal.
-                mMPG = (currentOdo / currentFuel) * 2.35215;
-            }
-
-            if(mActiveDataType == FuelConsumed.class) {
-                mNewData = true;
-            }
+            recalculateFuelEfficiency((FuelConsumed)measurement, null);
         }
     };
 
     private Odometer.Listener mFineOdometerListener = new Odometer.Listener() {
         public void receive(Measurement measurement) {
-            final Odometer odometer = (Odometer) measurement;
-            mOdoTotal.add(odometer.getValue().doubleValue(),
-                    System.currentTimeMillis());
-        }
-    };
-
-    private SteeringWheelAngle.Listener mSteeringWheelListener =
-            new SteeringWheelAngle.Listener() {
-        public void receive(Measurement measurement) {
-            final SteeringWheelAngle angle = (SteeringWheelAngle) measurement;
-            mSteeringWheelAngle = angle.getValue().doubleValue();
-            if(mActiveDataType == SteeringWheelAngle.class) {
-                mNewData = true;
-            }
+            recalculateFuelEfficiency(null, (Odometer)measurement);
         }
     };
 
@@ -404,10 +424,6 @@ public class GaugeDriverActivity extends Activity {
                     ).getService();
 
             try {
-                mVehicleManager.addListener(SteeringWheelAngle.class,
-                        mSteeringWheelListener);
-                mVehicleManager.addListener(VehicleSpeed.class,
-                        mSpeedListener);
                 mVehicleManager.addListener(FuelConsumed.class,
                         mFuelConsumedListener);
                 mVehicleManager.addListener(Odometer.class,
@@ -417,6 +433,9 @@ public class GaugeDriverActivity extends Activity {
             } catch(UnrecognizedMeasurementTypeException e) {
                 Log.w(TAG, "Couldn't add listeners for measurements", e);
             }
+
+            configureTimer(false);
+            configureTimer(true);
         }
 
         // Called when the connection with the service disconnects unexpectedly
