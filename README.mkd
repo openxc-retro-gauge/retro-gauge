@@ -1,49 +1,26 @@
 OpenXC Retro Gauge
-=========================
+==================
 
-The Retro Gauge is a mechanical vehicle gauge that outputs data from OpenXC via
-serial communication. The purpose of this gauge is to display vehicle data in a
-traditional automotive fashion, a gauge! The design intent was to keep the gauge
-as open and accessible as possible so that the community could contribute and
-benefit from the design. Below is a description of the different aspects of the
-project and how the gauge was created.
+This repository has been split into 4 different repositories to make versioning
+the Android app, firmware, enclosure design and electrical layout easier.
 
-For more details on the project, visit the [OpenXC
+For more details on the project, visit the [project page on the OpenXC
 website](http://openxcplatform.com/projects/retro-gauge.html).
 
-For instructions on how to solder your Retro Gauge PCB, checkout [this Instructable](http://www.instructables.com/id/How-to-Solder-Your-OpenXC-Retro-Gauge/)
+**Mechanical Enclosure Design** - The
+[retro-gauge-enclosure](http://github.com/openxc-retro-gauge/retro-gauge-enclosure)
+repository contains .STL and STEP files for the 3D printable gauge housing.
 
-This repository contains:
+**Hardware** - The
+[retro-gauge-hardware](http://github.com/openxc-retro-gauge/retro-gauge-hardware)
+repository contains Eagle schematics and PCB layouts for the gauge's embedded
+hardware.
 
-**PCB Schematics** - The `schematics` folder contains Eagle schematics for the
-gauge.
+**Firmware** - The
+[retro-gauge-firmware](http://github.com/openxc-retro-gauge/retro-gauge-firmware)
+repository contains Arduino source code to run on the Retro Gauge.
 
-**Arduino Firmware** - The `firmware` folder contains Arduino source code to run
-on the gauge.
-
-**Enclosure 3D Model** - The `enclosure` folder contains STEP files for the 3D
-printable gauge housing. The `makerbot_friendly` folder conatins the same STEP
-files, but rotated so they will lie flat on the bed - ready to load up onto a
-MakerBot and hit "print".
-
-**Android App** - The `android` folder contains an OpenXC Android application
-that can send various vehicle measurements to display on the gauge.
-
-## Data Format
-
-The Retro Gauge can receive two types of data packet over the UART (i.e. FTDI)
-connection at baud 9600:
-
-* Color data is delivered with three digits within angle brackets. `<###>`
-  Valid values are between 0 and 259.
-* Value data is delivered with two digits each of value, and percentage. The
-  numbers are separated by a comma, and enclosed in parentheses. `(vv,pp)`
-
-# License
-
-The Android and firmware source code is available under the BSD open source
-license.
-
-The designs in this repository are available under the [Creative Commons
-Atribution 3.0 Unported](http://creativecommons.org/licenses/by/3.0/deed.en_US)
-license.
+**Android** - The
+[retro-gauge-android](http://github.com/openxc-retro-gauge/retro-gauge-android)
+repository contains an Android application to control the gauge with vehicle
+data from the [OpenXC platform][openxc].
